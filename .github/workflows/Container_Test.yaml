@@ -25,7 +25,6 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r requirements/requirements.txt
-
       - name: Build
         run: |
           set -e  # Exit immediately if any command fail
@@ -55,7 +54,6 @@ jobs:
           SIZE=$(docker images --format "{{.Size}}" | head -n 1)
           make push TIME="$TIME" SIZE="$SIZE"
           docker stop stable
-
       - name: Upload Image
         uses: actions/upload-artifact@v3
         with:
@@ -266,6 +264,13 @@ jobs:
           path: |
             size.txt
 
+      - name: Upload Size
+        uses: actions/upload-artifact@v3
+        with:
+          name: size
+          path: |
+            size.txt
+
 
   UI-Test:
     runs-on: ubuntu-latest
@@ -400,4 +405,3 @@ jobs:
            SIZE=$(cat size.txt)
            docker login $REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
            make publish TIME="$TIME" SIZE="$SIZE"
-
