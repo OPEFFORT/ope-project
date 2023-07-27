@@ -38,37 +38,37 @@ jobs:
           sec_cut=${elapsed#*.} #get the decimal
           sec_round="${sec_cut:0:1}.${sec_cut:1}"
           sec=$(echo "$sec_round * 6" | bc -l) #calc secs
-          echo "$(min)m$(sec)s" > ./containers/testing/time.txt #send to file for use in diff run
+          echo "${min}.m_${sec}.s" > time.txt #send to file for use in diff run
           IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1) #get built image
           echo "Image = $IMAGE"
-          echo $IMAGE > ./containers/testing/image.txt
-
-      - name: Push Beta Version
-        run: |
-          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
-          docker run  -d --name stable $IMAGE
-          REGISTRY=$(cat base/ope_book_registry)
-          REGISTRY_USER=$(cat base/ope_book_user)
-          echo $REGISTRY $REGISTRY_USER
-          docker login $REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
-          TIME=$(cat time.txt)
-          SIZE=$(docker images --format "{{.Size}}" | head -n 1)
-          make push TIME="$TIME" SIZE="$SIZE"
-          docker stop stable
+          echo $IMAGE > image.txt
 
       - name: Upload Image
         uses: actions/upload-artifact@v3
         with:
           name: image
           path: |
-            image.txt
+            ./containers/testing/image.txt
 
       - name: Upload Time
         uses: actions/upload-artifact@v3
         with:
           name: time
           path: |
-            time.txt
+            ./containers/testing/time.txt
+
+      - name: Push Beta Version
+        run: |
+          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
+          docker run  -d --name stable $IMAGE
+          REGISTRY=$(cat base/ope_book_registry)
+          REGISTRY_USER=$(cat base/ope_registry_user)
+          echo $REGISTRY $REGISTRY_USER
+          docker login $REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
+          TIME=$(cat time.txt)
+          SIZE=$(docker images --format "{{.Size}}" | head -n 1)
+          make push TIME="$TIME" SIZE="$SIZE"
+          docker stop stable
 
 
   Health-Check:
@@ -78,7 +78,6 @@ jobs:
       run:
         working-directory: ./containers/testing
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -238,6 +237,8 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: time
+          path: |
+            ./containers/testing/
 
       - name: Pull Image
         run: |
@@ -264,7 +265,7 @@ jobs:
         with:
           name: size
           path: |
-            size.txt
+            ./containers/testing/size.txt
 
 
   UI-Test:
@@ -378,6 +379,9 @@ jobs:
   Publish:
      runs-on: ubuntu-latest #use the latest ubuntu container image
      needs: Approval
+     defaults:
+       run:
+         working-directory: ./containers/testing
      steps:
        - name: Checkout Code
          uses: actions/checkout@v3
@@ -386,18 +390,21 @@ jobs:
          uses: actions/download-artifact@v3
          with:
           name: time
+          path: |
+            ./containers/testing/
 
        - name: Download Size
          uses: actions/download-artifact@v3
          with:
           name: size
+          path: |
+            ./containers/testing/
 
        - name: Push to Public Version
          run: |
            REGISTRY=$(cat base/ope_book_registry)
-           REGISTRY_USER=$(cat base/ope_book_user)
+           REGISTRY_USER=$(cat base/ope_registry_user)
            TIME=$(cat time.txt)
            SIZE=$(cat size.txt)
            docker login $REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
            make publish TIME="$TIME" SIZE="$SIZE"
-

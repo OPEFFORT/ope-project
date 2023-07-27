@@ -43,7 +43,7 @@ USER ${NB_UID}
 # packages. Install Python 3 packages
 #RUN python --version
 
-RUN conda install --quiet --yes conda=23.3.1 python=3.9.16 --no-pin --force-reinstall && \ 
+RUN conda install --quiet --yes conda=23.3.1 python=3.9.16 --no-pin --force-reinstall && \
     conda install --quiet --yes ${PYTHON_PREREQ_VERSIONS} && \
     conda install --quiet --yes ${PYTHON_INSTALL_PACKAGES} && \
     pip install nbclient==0.5.13 && \
@@ -71,7 +71,7 @@ RUN touch /home/${NB_USER}/.hushlogin && \
 # finally remove default working directory from joyvan home
     rmdir /home/${NB_USER}/work && \
     # as per the nbstripout readme we setup nbstripout be always be used for the joyvan user for all repos
-    nbstripout --install --system 
+    nbstripout --install --system
 
 # Static Customize for OPE USER ID choices
 # To avoid problems with start.sh logic we do not modify user name
