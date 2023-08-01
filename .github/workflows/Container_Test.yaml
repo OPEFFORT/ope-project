@@ -25,11 +25,12 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r requirements/requirements.txt
+
       - name: Build
         run: |
           set -e  # Exit immediately if any command fail
           start=$(date +%s) #start the timer
-          timeout 50m time make build
+          #timeout 50m time make build
           end=$(date +%s) #end timer
           seconds=$((end-start))  #calc build time in sec
           elapsed=$(echo "scale=2; ($end - $start) / 60.0" | bc) #get time in min with dec
@@ -37,36 +38,42 @@ jobs:
           sec_cut=${elapsed#*.} #get the decimal
           sec_round="${sec_cut:0:1}.${sec_cut:1}"
           sec=$(echo "$sec_round * 6" | bc -l) #calc secs
-          echo "$(min)m$(sec)s" > ./containers/testing/time.txt #send to file for use in diff run
-          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1) #get built image
+          echo "$(min)m$(sec)s" > time.txt #send to file for use in diff run
+          #IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1) #get built image
           echo "Image = $IMAGE"
-          echo $IMAGE > ./containers/testing/image.txt
+          echo "image" > image.txt
 
-      - name: Push Beta Version
-        run: |
-          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
-          docker run  -d --name stable $IMAGE
-          REGISTRY=$(cat base/ope_book_registry)
-          REGISTRY_USER=$(cat base/ope_book_user)
-          echo $REGISTRY $REGISTRY_USER
-          docker login $REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
-          TIME=$(cat time.txt)
-          SIZE=$(docker images --format "{{.Size}}" | head -n 1)
-          make push TIME="$TIME" SIZE="$SIZE"
-          docker stop stable
       - name: Upload Image
         uses: actions/upload-artifact@v3
         with:
           name: image
           path: |
-            image.txt
+            ./containers/testing/image.txt
 
       - name: Upload Time
         uses: actions/upload-artifact@v3
         with:
           name: time
           path: |
-            time.txt
+            ./containers/testing/time.txt
+
+      - name: Download image
+        uses: actions/download-artifact@v3
+        with:
+          name: image
+
+      - name: Push Beta Version
+        run: |
+          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
+          docker run  -d --name stable $IMAGE
+          REGISTRY=$(cat base/ope_book_registry)
+          REGISTRY_USER=$(cat base/ope_registry_user)
+          echo $REGISTRY $REGISTRY_USER
+          docker login $REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
+          TIME=$(cat time.txt)
+          SIZE=$(docker images --format "{{.Size}}" | head -n 1)
+          make push TIME="$TIME" SIZE="$SIZE"
+          docker stop stable
 
 
   Health-Check:
@@ -76,7 +83,6 @@ jobs:
       run:
         working-directory: ./containers/testing
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -400,7 +406,7 @@ jobs:
        - name: Push to Public Version
          run: |
            REGISTRY=$(cat base/ope_book_registry)
-           REGISTRY_USER=$(cat base/ope_book_user)
+           REGISTRY_USER=$(cat base/ope_registry_user)
            TIME=$(cat time.txt)
            SIZE=$(cat size.txt)
            docker login $REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
