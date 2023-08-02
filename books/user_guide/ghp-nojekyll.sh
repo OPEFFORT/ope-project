@@ -22,6 +22,7 @@ if ! git ls-tree  --name-only $branch 2> /dev/null | grep -q \.nojekyll ; then
      echo "ERROR: cannot switch to $branch ... please fix and retry"
      exit -1
    fi
+   cd .. && cd ..
    touch .nojekyll
    git add .nojekyll
    git commit -m "adding .nojekyll"

@@ -1,14 +1,9 @@
 <!-- #region -->
-Book Title 
+OPE User Guide
 =====================================
 
-In this book we will teach something fun
-- fun thing one
-- fun thing 2
+This user guide is intended to teach you how to author OPE-style books, as well as setup container images that contain all the software required for following along with the book content. 
 
-The material is broken down in to three parts: 
-1. Part 1 
-2. Part 2
-3. Part 3
+
 
 <!-- #endregion -->
