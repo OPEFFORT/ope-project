@@ -5,6 +5,7 @@ parts:
   numbered: true
   chapters:
   - file: intro/chapter1
+  - file: intro/chapter2
 - caption: 'OPE Tools'
   numbered: true
   chapters:
