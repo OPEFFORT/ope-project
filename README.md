@@ -6,11 +6,16 @@ This user guide is intended to teach you how to author OPE-style books, as well 
 
 The OPE project is an initiative towards making education open source, and to achieve highly interactive teaching and presentation material.
 
+## OPE Architecture 
+
+
+  ![OPE Architecture](content/images/OPE-Architecture.png)
+
+
+
 ## View Published User Guide
 
-1. [Text Book](https://isaiahstapleton.github.io/ope-docubook/textbook/intro_tb.html)
-2. [Lecture Notes](https://isaiahstapleton.github.io/ope-docubook/lecturenotes/intro_ln.html)
-3. [Lab Manual](https://isaiahstapleton.github.io/ope-docubook/labmanual/intro_lm.html)
+[User Guide](https://isaiahstapleton.github.io/ope-project/user_guide/user_guide_intro.html)
 
 ## [OPE CLI Tool](https://github.com/OPEFFORT/tools)
 
