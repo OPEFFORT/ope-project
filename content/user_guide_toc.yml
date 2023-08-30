@@ -4,32 +4,32 @@ parts:
 - caption: 'Introduction'
   numbered: true
   chapters:
-  - file: intro/chapter1
-  - file: intro/chapter2
+  - file: user_guide/intro/chapter1
+  - file: user_guide/intro/chapter2
 - caption: 'OPE Tools'
   numbered: true
   chapters:
-  - file: tools/chapter1
+  - file: user_guide/tools/chapter1
 - caption: 'Creating a New Project'
   numbered: true
   chapters:
-  - file: project/chapter1
+  - file: user_guide/project/chapter1
 - caption: 'Creating a New Book'
   numbered: true
   chapters:
-  - file: book/chapter1
-  - file: book/chapter2
-  - file: book/chapter3
-  - file: book/chapter4
+  - file: user_guide/book/chapter1
+  - file: user_guide/book/chapter2
+  - file: user_guide/book/chapter3
+  - file: user_guide/book/chapter4
 - caption: 'Building Container'
   numbered: true
   chapters:
-  - file: container/chapter1
-  - file: container/chapter2
+  - file: user_guide/container/chapter1
+  - file: user_guide/container/chapter2
 - caption: 'List of OPE Textbooks'
   numbered: true
   chapters:
-  - file: tblist/chapter1
+  - file: user_guide/tblist/chapter1
 
 
 

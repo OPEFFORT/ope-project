@@ -1,0 +1,14 @@
+format: jb-book
+root: contributor_guide_intro
+parts:
+- caption: 'Introduction'
+  numbered: true
+  chapters:
+  - file: contributor_guide/intro/chapter1
+  - file: contributor_guide/intro/chapter2
+- caption: 'How to Contribute'
+  numbered: true
+  chapters:
+  - file: contributor_guide/contribute/chapter1
+  - file: contributor_guide/contribute/chapter2
+  - file: contributor_guide/contribute/chapter3
