@@ -30,6 +30,3 @@ parts:
   numbered: true
   chapters:
   - file: user_guide/tblist/chapter1
-
-
-
