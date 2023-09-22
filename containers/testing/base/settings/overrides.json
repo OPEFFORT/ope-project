@@ -18,12 +18,12 @@
                             "label": "New",
                             "items": [
 				{
-                                    "disabled": true,
+                                    "disabled": false,
                                     "command": "console:create",
                                     "rank": 1
 				},
 				{
-                                    "disabled": true,
+                                    "disabled": false,
                                     "command": "notebook:create-new",
                                     "rank": 10
 				}
@@ -36,12 +36,12 @@
 			"rank": 2
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "filemenu:create-console",
 			"rank": 2.1
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "filemenu:close-and-cleanup",
 			"rank": 3.1
                     },
@@ -50,17 +50,17 @@
 			"rank": 99
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "filemenu:logout",
 			"rank": 99
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "filemenu:shutdown",
 			"rank": 99
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "docmanager:clone",
 			"rank": 2
                     },
@@ -69,17 +69,17 @@
 			"rank": 4
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "docmanager:save",
 			"rank": 4
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "docmanager:save-as",
 			"rank": 4
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "docmanager:save-all",
 			"rank": 4
                     },
@@ -88,17 +88,17 @@
 			"rank": 5
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "docmanager:reload",
 			"rank": 5
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "docmanager:restore-checkpoint",
 			"rank": 5
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "docmanager:rename",
 			"rank": 5
                     },
@@ -107,32 +107,32 @@
 			"rank": 3
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "application:close",
 			"rank": 3
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "application:close-all",
 			"rank": 3.2
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"type": "separator",
 			"rank": 98
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "apputils:print",
 			"rank": 98
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "workspace-ui:save-as",
 			"rank": 40
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "workspace-ui:save",
 			"rank": 40
                     },
@@ -141,7 +141,7 @@
 			"rank": 6
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "docmanager:download",
 			"rank": 6
                     },
@@ -150,7 +150,7 @@
 			"rank": 6
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "filebrowser:create-main-launcher",
 			"rank": 1
                     },
@@ -159,12 +159,12 @@
 			"rank": 1
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "filebrowser:open-path",
 			"rank": 1
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "filebrowser:open-url",
 			"rank": 1
                     },
@@ -190,7 +190,7 @@
                     },
                     {
 			"type": "submenu",
-			"disabled": true,
+			"disabled": false,
 			"rank": 10,
 			"submenu": {
                             "id": "jp-mainmenu-file-notebookexport",
@@ -207,7 +207,7 @@
 		"rank": 1
             },
             {
-		"disabled": true,
+		"disabled": false,
 		"id": "jp-mainmenu-edit",
 		"items": [
                     {
@@ -356,7 +356,7 @@
 		"rank": 2
             },
             {
-		"disabled": true,
+		"disabled": false,
 		"id": "jp-mainmenu-view",
 		"items": [
                     {
@@ -518,7 +518,7 @@
 		"rank": 3
             },
             {
-		"disabled": true,
+		"disabled": false,
 		"id": "jp-mainmenu-run",
 		"items": [
                     {
@@ -582,7 +582,7 @@
 		"rank": 4
             },
             {
-		"disabled": true,
+		"disabled": false,
 		"id": "jp-mainmenu-kernel",
 		"items": [
                     {
@@ -692,12 +692,12 @@
 			"rank": 4
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "docmanager:toggle-autosave",
 			"rank": 4
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "docmanager:toggle-name-file-on-save",
 			"rank": 4
                     },
@@ -708,7 +708,7 @@
                     {
 			"type": "submenu",
 			"submenu": {
-                            "disabled": true,
+                            "disabled": false,
                             "id": "jp-mainmenu-settings-apputilstheme",
                             "label": "Theme",
                             "items": [
@@ -722,14 +722,14 @@
                                     "type": "separator"
 				},
 				{
-                                    "disabled": true,
+                                    "disabled": false,
                                     "command": "apputils:incr-font-size",
                                     "args": {
 					"key": "code-font-size"
                                     }
 				},
 				{
-                                    "disabled": true,
+                                    "disabled": false,
                                     "command": "apputils:decr-font-size",
                                     "args": {
 					"key": "code-font-size"
@@ -739,14 +739,14 @@
                                     "type": "separator"
 				},
 				{
-                                    "disabled": true,
+                                    "disabled": false,
                                     "command": "apputils:incr-font-size",
                                     "args": {
 					"key": "content-font-size1"
                                     }
 				},
 				{
-                                    "disabled": true,
+                                    "disabled": false,
                                     "command": "apputils:decr-font-size",
                                     "args": {
 					"key": "content-font-size1"
@@ -773,10 +773,10 @@
                     },
                     {
 			"type": "submenu",
-			"disabled": true,
+			"disabled": false,
 			"submenu": {
                             "id": "jp-mainmenu-view-codemirror-keymap",
-                            "disabled": true,
+                            "disabled": false,
                             "label": "Text Editor Key Map",
                             "items": [
 				{
@@ -809,7 +809,7 @@
                     },
                     {
 			"type": "submenu",
-			"disabled": true,
+			"disabled": false,
 			"submenu": {
                             "id": "jp-mainmenu-view-codemirror-theme",
                             "label": "Text Editor Theme",
@@ -918,7 +918,7 @@
                     },
                     {
 			"type": "submenu",
-			"disabled": true,
+			"disabled": false,
 			"submenu": {
                             "id": "jp-mainmenu-settings-consoleexecute",
                             "label": "Console Run Keystroke",
@@ -948,7 +948,7 @@
 			"rank": 100
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "extensionmanager:toggle",
 			"rank": 100
                     },
@@ -990,7 +990,7 @@
 		"rank": 999
             },
             {
-		"disabled": true,
+		"disabled": false,
 		"id": "jp-mainmenu-help",
 		"items": [
                     {
@@ -1006,7 +1006,7 @@
 			"rank": 2
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "help:jupyter-forum",
 			"rank": 2
                     },
@@ -1019,7 +1019,7 @@
 			"rank": 1
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "help:launch-classic-notebook",
 			"rank": 1
                     },
@@ -1032,7 +1032,7 @@
 			"rank": 0.1
                     },
                     {
-			"disabled": true,
+			"disabled": false,
 			"command": "inspector:open",
 			"rank": 0.1
                     },

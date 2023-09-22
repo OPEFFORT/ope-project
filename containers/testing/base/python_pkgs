@@ -9,9 +9,8 @@ jupyter_nbextensions_configurator
 jupyter_contrib_nbextensions
 ipydrawio
 ipydrawio-export 
-jupyterlab-myst 
 jupyterlab-spellchecker
 nbconvert
 pyppeteer
 gdb
-
+jupyterlab-myst==1.1.3
