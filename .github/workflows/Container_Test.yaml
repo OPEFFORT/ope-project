@@ -1,0 +1,410 @@
+name: OPE Container Test
+on:
+  push:
+    branches:
+      - 'main'
+
+env:
+    REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+
+jobs:
+  Setup-and-Build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./containers/testing
+    steps:
+      - name: Checkout Code #loads repo into action
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements/requirements.txt
+
+      - name: Build
+        run: |
+          set -e  # Exit immediately if any command fail
+          start=$(date +%s) #start the timer
+          timeout 50m time make build
+          end=$(date +%s) #end timer
+          seconds=$((end-start))  #calc build time in sec
+          elapsed=$(echo "scale=2; ($end - $start) / 60.0" | bc) #get time in min with dec
+          min=${elapsed%.*}  #extract min part
+          sec_cut=${elapsed#*.} #get the decimal
+          sec_round="${sec_cut:0:1}.${sec_cut:1}"
+          sec=$(echo "$sec_round * 6" | bc -l) #calc secs
+          echo "${min}.m_${sec}.s" > time.txt #send to file for use in diff run
+          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1) #get built image
+          echo "Image = $IMAGE"
+          echo $IMAGE > image.txt
+
+      - name: Upload Image
+        uses: actions/upload-artifact@v3
+        with:
+          name: image
+          path: |
+            ./containers/testing/image.txt
+
+      - name: Upload Time
+        uses: actions/upload-artifact@v3
+        with:
+          name: time
+          path: |
+            ./containers/testing/time.txt
+
+      - name: Push Beta Version
+        run: |
+          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
+          docker run  -d --name stable $IMAGE
+          REGISTRY=$(cat base/ope_book_registry)
+          REGISTRY_USER=$(cat base/ope_registry_user)
+          echo $REGISTRY $REGISTRY_USER
+          docker login $REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
+          TIME=$(cat time.txt)
+          SIZE=$(docker images --format "{{.Size}}" | head -n 1)
+          make push TIME="$TIME" SIZE="$SIZE"
+          docker stop stable
+
+
+  Health-Check:
+    needs: Setup-and-Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./containers/testing
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Pull Image
+        run: |
+          make pull-beta
+
+      - name: Check Container Health
+        run: |
+          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1) #get built image
+          docker run -d --name stable $IMAGE
+          sleep 7 #wait to start to check health
+          CONTAINER_NAME="stable"
+          HEALTH=$(docker ps --format "{{.Names}}: {{.Status}}" | grep "$CONTAINER_NAME" | awk '{print $2}') #extract health status
+          echo ""
+          if [[ "$HEALTH" == "Up" ]]; then
+          echo "******Pass: container is up and running*******"
+          else
+          echo "*******ERROR : container is not running*******"
+          exit -1
+          fi
+          echo ""
+          docker stop stable
+
+
+  Image-Version-Check:
+    needs: Setup-and-Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./containers/testing
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Pull Image
+        run: |
+          make pull-beta
+
+      - name: Check Image Version
+        run: |
+          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1) #get just built image
+          echo "IMAGE = $IMAGE"
+          docker run -d --name stable $IMAGE
+          ID=$( docker ps -aqf "name=stable" ) #get id of image
+          docker inspect $IMAGE > image.json #write inspect info to json for parsing
+          REPO_TAG=$(jq -r '.[0].RepoTags[0]' image.json) #acquire tag
+          if [[ "$REPO_TAG" == "$IMAGE" ]]; then
+          echo "*********CORRECT IMAGE AND VERSION: $IMAGE*********"
+          else
+          echo "***********INCORRECT IMAGE or VERSION, $REPO_TAG is not the proper image $IMAGE**********"
+          exit -1
+          fi
+          docker stop stable
+
+
+  JupyterNB-Test:
+    needs: Setup-and-Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./containers/testing
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Pull Image
+        run: |
+          make pull-beta
+
+      - name: Run Container
+        run: |
+          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
+          docker run -d -p 8888:8888 --name stable -v /test.ipynb:/home/jovyan/work $IMAGE
+          container_id=$(docker ps -qf "name=stable" | head -n 1)
+          docker cp tests/test.ipynb $container_id:/home/jovyan/work #mount test nb into container
+
+      - name: Wait for Container Start
+        run: |
+          until docker exec stable jupyter lab --version; do sleep 1; done #start JupyterLab in notebook and wait until its up
+
+      - name: Execute Notebook
+        run: |
+          container_id=$(docker ps -qf "name=stable" | head -n 1)
+          docker exec $container_id jupyter lab --generate-config
+          docker exec $container_id sh -c "echo 'c.NotebookApp.token = \"\"' >> /home/jovyan/.jupyter/jupyter_notebook_config.py" #create it without a token
+          docker exec $container_id jupyter labextension install @jupyter-widgets/jupyterlab-manager #install widgets
+          docker exec $container_id pip install nbclient
+          docker exec $container_id pip install nbconvert
+          docker exec $container_id jupyter lab build --minimize=False
+          docker exec $container_id jupyter execute /home/jovyan/work/test.ipynb #if import fails import error will be triggered here
+          echo "************SUCCESS***********"
+          docker stop stable
+
+
+  Package-Version-Test:
+    needs: Setup-and-Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./containers/testing
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Pull Image
+        run: |
+          make pull-beta
+
+      - name: Checkout Package Versions
+        run: |
+          cp tests/version_check.py ./version_check.py #add python script to compare vers to this file
+          cp tests/versions.txt ./versions.txt #add correct version list to compare against
+          chmod +x ./version_check.py # change perms to execute
+          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1) #get image name
+          docker run -d --name stable $IMAGE
+          sleep 7 # let properly start
+          ID=$( docker ps -aqf "name=stable" )
+          docker exec stable pip list >> ./list.txt #get rid of header for python comparison test
+          tail -n +3 ./list.txt > temp.txt
+          mv ./temp.txt ./list.txt #rewrite truncated list to file
+          python3 version_check.py ./list.txt versions.txt #send to python for checking
+          docker stop stable
+
+
+  Checksum:
+    needs: Setup-and-Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./containers/testing
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Checksum
+        run: |
+          make -C tests checksum-test
+
+
+  Size-and-Time-Display:
+    needs: Setup-and-Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./containers/testing
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download Time
+        uses: actions/download-artifact@v3
+        with:
+          name: time
+          path: |
+            ./containers/testing/
+
+      - name: Pull Image
+        run: |
+          make pull-beta
+
+      - name: Extract Size and Display Time and Size
+        run: |
+          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
+          echo "$IMAGE"
+          docker run -d --name stable $IMAGE
+          SIZE=$( docker images --format "{{.Size}}" $IMAGE ) #extract size from running image
+          echo ""
+          echo ""
+          TIME=$(cat time.txt)
+          echo "BUILD TIME:  $TIME" #display calced time
+          echo ""
+          echo "IMAGE SIZE:  $SIZE" #display size in GB
+          echo ""
+          echo $SIZE > size.txt
+          docker stop stable
+
+      - name: Upload Size
+        uses: actions/upload-artifact@v3
+        with:
+          name: size
+          path: |
+            ./containers/testing/size.txt
+
+
+  UI-Test:
+    runs-on: ubuntu-latest
+    needs: Setup-and-Build
+    defaults:
+      run:
+        working-directory: ./containers/testing
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setting up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Chromium
+        run: |
+          #sudo apt-get update
+          sudo apt-get install -y chromium-browser
+          sudo apt-get upgrade chromium-browser
+
+      - name: Install Necessary Python Packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tests/requirements.txt
+          pip install --upgrade selenium
+          pip install --upgrade webdriver_manager
+          chromedriver --version
+
+      - name: Pull beta-version
+        run: |
+          make pull-beta
+
+      - name: Run JupyterLab Inside Container
+        run: |
+          make run-beta &
+          sleep 3
+
+      - name: Run RISE Extension Test
+        run: |
+          sleep 5
+          make -C tests rise-test #this triggers both testing of rise functionality & recording of screenshots
+
+      - name: Run Screenshots Difference Test
+        run: |
+          sleep 5
+          make -C tests screenshots-test #this just runs screenshot difference
+
+
+  gdb-Test:
+    runs-on: ubuntu-latest
+    needs: Setup-and-Build
+    defaults:
+      run:
+        working-directory: ./containers/testing
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements/requirements.txt
+
+      - name: Pull beta-version
+        run: |
+          make pull-beta
+
+      - name: Run gdb
+        run: |
+         IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
+         docker run -d --name stable $IMAGE
+         docker exec stable bash -c 'for ((i=0;i<100; i++)); do gdb -ex starti -ex quit -q --batch /usr/bin/date 2>/dev/null | grep ld; done' | tee out | uniq #run jonatahns gdb test
+         expected_lines=100
+         actual_lines=$(wc -l < out)
+         if [ "$actual_lines" -lt "$expected_lines" ]; then
+         echo "******************Test failed****************" #if the output file contians no iterations through the test file, gdb has failed
+         else
+         echo "******************Test passed***************"
+         fi
+         docker stop stable
+
+
+
+  Approval:
+    runs-on: ubuntu-latest
+    needs: [Setup-and-Build, Health-Check, Image-Version-Check, JupyterNB-Test, Package-Version-Test, Checksum, Size-and-Time-Display, UI-Test, gdb-Test]
+    environment:
+      name: approval
+    steps:
+      - name: Create Workflow Run Approval
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+
+          # Extract the necessary information for the API request.
+          OWNER="${{ github.repository_owner }}"
+          REPO="${{ github.repository }}"
+          RUN_ID="${{ github.run_id }}"
+
+          # Send a POST request to create the workflow run approval.
+          RESPONSE=$(curl -X POST \
+            -H "Authorization: token $TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/$OWNER/$REPO/actions/runs/$RUN_ID/approve")
+
+
+
+  Publish:
+     runs-on: ubuntu-latest #use the latest ubuntu container image
+     needs: Approval
+     defaults:
+       run:
+         working-directory: ./containers/testing
+     steps:
+       - name: Checkout Code
+         uses: actions/checkout@v3
+
+       - name: Download Time
+         uses: actions/download-artifact@v3
+         with:
+          name: time
+          path: |
+            ./containers/testing/
+
+       - name: Download Size
+         uses: actions/download-artifact@v3
+         with:
+          name: size
+          path: |
+            ./containers/testing/
+
+       - name: Push to Public Version
+         run: |
+           REGISTRY=$(cat base/ope_book_registry)
+           REGISTRY_USER=$(cat base/ope_registry_user)
+           TIME=$(cat time.txt)
+           SIZE=$(cat size.txt)
+           docker login $REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
+           make publish TIME="$TIME" SIZE="$SIZE"

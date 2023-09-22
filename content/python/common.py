@@ -25,18 +25,18 @@ matplotlib.rcParams['animation.html'] = 'jshtml'
 #
 # display(Javascript(js_code))
 
-# common functions 
+# common functions
 # Custom functions and classes to help with standard slide elements that I use
 # NOTE:  I don't know python so this probably all should be rewritten by someone
-#        who knows what they are doing.  
+#        who knows what they are doing.
 
 def MDBox(contents, title="", w="100%", h="100%",
           fontsize="inherit",
           color="inherit",
           bgcolor="inherit",
           overflow="auto"):
-        
-    md_text = title 
+
+    md_text = title
     md_text += '''
 <div style="width:''' + w
     md_text += '''; height:''' + h
@@ -44,7 +44,7 @@ def MDBox(contents, title="", w="100%", h="100%",
     md_text += '''; overflow: ''' + overflow
     md_text += ''';" >
 
-'''      
+'''
     md_text += contents
     md_text += '''
 
@@ -66,10 +66,10 @@ def FileCodeBox(file, lang, number=False, **kwargs):
     text_file = open(file, "r")
     #read whole file to a string
     data = text_file.read()
-    
+
     if number:
         data = numberLines(data)
-        
+
     #close file
     text_file.close()
     # build contents from file and language
@@ -89,7 +89,7 @@ def FileMDBox(file, **kwargs):
     #close file
     text_file.close()
     # build contents from file and language
-    # build output widget 
+    # build output widget
     return MDBox(data, **kwargs)
 
 # Make a box that display the specified image files from the specified
@@ -97,13 +97,13 @@ def FileMDBox(file, **kwargs):
 # displayed.  A slider is used to select between the images
 # Note if you want control the order you must specifiy the files
 # explicitly
-#  This function requires backend kernel see 
+#  This function requires backend kernel see
 def mkImgsBox(dir,files=[]):
     if len(files)==0:
         files=os.listdir(dir);
-        
+
     interact(lambda i,d=fixed(dir),
-             f=fixed(files): 
+             f=fixed(files):
              display(Image(dir + '/' + files[i])),
              i=widgets.IntSlider(min=0, max=(len(files)), step=1, value=0));
 
@@ -111,7 +111,7 @@ def files_to_imgArray(dir, files=[]):
     if len(files)==0:
         files=os.listdir(dir);
 #        print(files)
-        
+
     imgs = [];
     for f in files:
         imgs.append(plt.imread(dir + "/" + f))
@@ -135,7 +135,7 @@ def mkImgsAnimateBox(dir, files=[], dpi=100.0, xpixels=0, ypixels=0, force=False
 
     if os.path.exists(dir + "/" + saveto):
         os.remove(dir + "/" + saveto);
-        
+
     imgs=files_to_imgArray(dir, files)
     if (xpixels==0):
         xpixels = imgs[0].shape[0]
@@ -206,7 +206,7 @@ def bin2Hex(x, sep=' $\\rightarrow$ '):
 #    v=np.uint8(0xaa)
 #    w=np.bitwise_and(u,v)
 # Empty value is indicated via [""] note also force cell height to avoid
-#    the empty row from shrinking 
+#    the empty row from shrinking
 #    displayBytes([[u],[v],[""]],labels=["u","v", "u & v"], td_height="85px")
 #    displayBytes([[u],[v],[w]],labels=["u","v", "u & v"])
 #
@@ -232,7 +232,7 @@ def toBits(v,dtype,count,numbits):
 def bitLabels(n):
     labels=[None] * n
     n=n-1
-    for i in range(n,-1,-1): 
+    for i in range(n,-1,-1):
         labels[n-i]="<em>b<sub>" + str(i) + "</sub></em>"
     return labels
 
@@ -246,13 +246,13 @@ def displayBytes(bytes=[[0x00]],
                  numbits=8,
                  dtype=np.uint8,
                  columns=["[<em>b<sub>7</sub></em>",
-                      "<em>b<sub>6</sub></em>", 
-                      "<em>b<sub>5</sub></em>", 
-                      "<em>b<sub>4</sub></em>", 
-                      "<em>b<sub>3</sub></em>", 
-                      "<em>b<sub>2</sub></em>", 
+                      "<em>b<sub>6</sub></em>",
+                      "<em>b<sub>5</sub></em>",
+                      "<em>b<sub>4</sub></em>",
+                      "<em>b<sub>3</sub></em>",
+                      "<em>b<sub>2</sub></em>",
                       "<em>b<sub>1</sub></em>",
-                      "<em>b<sub>0</sub></em>]"], 
+                      "<em>b<sub>0</sub></em>]"],
                  center=True,
                  th_font_size="1.5vw",
                  th_border_color="#cccccc",
@@ -273,30 +273,30 @@ def displayBytes(bytes=[[0x00]],
     # there is probably a better way to do this
     #if not labels:
     #    labels = ["" for i in range(len(bytes))]
-    
+
 #    print(bytes, bytes[0], np.dtype(bytes[0], dtype(bytes[0]).nbytes))
     sizeinbits = dtype(0).nbytes
     sizeinbits = sizeinbits * 8
-    
+
     # have attempted to support specifiy the number of bits
     # but not sure it really works will need to be tested
     if numbits<sizeinbits:
         count=sizeinbits;
     else:
         count=numbits
-  
-    # convert each byte value into an array of bits        
-    try:    
+
+    # convert each byte value into an array of bits
+    try:
         x = np.unpackbits(np.array(bytes,dtype=dtype),count,axis=1)
         if (numbits<sizeinbits):
             x = [ i[numbits:] for i in x ]
     except:
         x = np.array([ toBits(i,dtype=dtype,count=count,numbits=numbits) for i in bytes ])
 
-    # Add any prefix data columns to the bits 
+    # Add any prefix data columns to the bits
     if prefixvalues:
         x = np.concatenate((prefixvalues,x),axis=1)
-            
+
     if not columns:
         if not labels:
             df=pd.DataFrame(x)
@@ -311,11 +311,11 @@ def displayBytes(bytes=[[0x00]],
             df=pd.DataFrame(x,columns=columns)
         else:
             df=pd.DataFrame(x,index=labels,columns=columns)
-            
+
     # style the table
     if labelstitle:
         df = df.rename_axis(labelstitle, axis="columns")
-        
+
     th_props = [
         ('font-size', th_font_size),
         ('text-align', 'center'),
@@ -338,7 +338,7 @@ def displayBytes(bytes=[[0x00]],
     if td_height:
         # print("adding td_height: ", td_height)
         td_props.append(('height', td_height))
-        
+
     td_hover_props = [
         ('background-color', td_hover_bgcolor),
         ('color', td_hover_color)
@@ -347,11 +347,11 @@ def displayBytes(bytes=[[0x00]],
         ('background-color', tr_hover_bgcolor),
         ('border', '4px solid ' + tr_hover_border_color)
     ]
-    
+
     th_hover_props = [
         ('border', 'solid ' + th_hover_border_color)
     ]
-    
+
     body=df.style.set_table_styles([
             {'selector' : 'td', 'props' : td_props },
             {'selector' : 'th', 'props': th_props },
@@ -366,11 +366,11 @@ def displayBytes(bytes=[[0x00]],
     # if no row labels hide them
     if (len(labels)==0):
         body.hide_index()
-    # if no column labels hide them 
+    # if no column labels hide them
     if (len(columns)==0):
         body.hide_columns()
     del warnings
-    # make body sticky header if present stay in place    
+    # make body sticky header if present stay in place
     body.set_sticky(axis=1)
 
     # center in frame
@@ -384,11 +384,11 @@ def displayBytes(bytes=[[0x00]],
     body = prehtml + body + posthtml
     if disp:
         display(HTML(body))
-    else:    
-        return body   
+    else:
+        return body
 
 def mkHexTbl():
-    displayBytes(bytes=[i for i in range(16)], numbits=4, 
+    displayBytes(bytes=[i for i in range(16)], numbits=4,
                  prefixvalues=[[format(i,"0d"),format(i,"1x")] for i in range(16)],
                  prefixcolumns=["Dec", "Hex"],
              columns=["[$b_3$", "$b_2$", "$b_1$", "$b_0$]"])
@@ -436,23 +436,23 @@ def htmlFigTD(img):
     if not figmargin: figmargin='0 0 0 0'
     cellmargin=img.get('cellmargin')
     if not cellmargin: cellmargin='0 0 0 0'
-    
+
     html_text = '''        <td colspan="''' + colspan + '''" width="''' + cellwidth + '''" style="padding: 0; margin: ''' + cellmargin + '''; background-color:''' + bgcolor + ''';">
             <div style="padding: '''+ padding + '''; margin: ''' + divmargin + ''';">
               <figure style="padding: 0; margin: ''' + figmargin + '''; width:''' + figwidth + ''';'''
 
     if border:
         html_text += '''border: ''' + border + ''';'''
-        
+
     html_text += '''">
                    <img src="''' + src + '''" width="100%" style="padding: 0; margin: 0;">
 '''
     if  extratxt:
        html_text +=  '''                   <div align="right" style="color:''' + extracolor + '''; line-height: 0; font-size: ''' + extrafont + '''">
                     <em>
-''' + extratxt + '''                    
+''' + extratxt + '''
                     </em>
-                  </div> 
+                  </div>
 '''
     if caption:
         html_text += '''                  <figcaption>
@@ -475,7 +475,7 @@ def toImg(i):
 
     if ((not type(i) == type({})) or (not 'src' in i)):
         raise ValueError('img must at have a src specified')
-        
+
     return i
 
 # a list of imgs
@@ -483,9 +483,9 @@ def toImgs(i):
     # already a list so don't do anyting
     if type(i) == type([]):
         return i
-    
+
     i=[toImg(i)]
-    
+
     return i
 
 def htmlFigTableStart(id, align, width, margin):
@@ -498,7 +498,7 @@ def htmlFigTableStart(id, align, width, margin):
     return html_text
 
 def htmlFigTRStart():
-    html_text = '''    <tr style="padding: 0; margin: 0;"> 
+    html_text = '''    <tr style="padding: 0; margin: 0;">
 '''
     return html_text
 
@@ -514,7 +514,7 @@ def htmlFigTableEnd():
 
 def htmlFigCaption(caption, align):
     html_text = '''    <caption align="bottom" style="text-align: ''' + align + '''; padding: 0; margin: 0;" >
-          <i>''' + caption + '''</i> 
+          <i>''' + caption + '''</i>
     </caption>
 '''
     return html_text
@@ -526,13 +526,13 @@ def htmlFig(imgs, id="", align="center", width="100%",
     rows = len(imgs)
     maxcols = 1
 
-    html_text ='''<!-- produced by: 
-htmlFig("'''+ str(imgs) + '''", 
-        id="'''+ id + '''", 
-        align="''' + align + '''", 
+    html_text ='''<!-- produced by:
+htmlFig("'''+ str(imgs) + '''",
+        id="'''+ id + '''",
+        align="''' + align + '''",
         width="''' + width + '''",
         margin="'''+ margin + '''",
-        caption="'''+ caption + '''", 
+        caption="'''+ caption + '''",
         captionalign="''' + captionalign + '''")
 -->
 '''
@@ -548,20 +548,20 @@ htmlFig("'''+ str(imgs) + '''",
         rows.append(r)
         if (len(r)>maxcols):
             maxcols = len(r);
-    
+
     for r in rows:
         cols=len(r)
         html_text += htmlFigTRStart()
-        
+
         for i in r:
             img=toImg(i)
             html_text += htmlFigTD(img)
 
         html_text += htmlFigTREnd()
-        
+
     if caption:
         html_text += htmlFigCaption(caption, captionalign)
-        
+
     html_text += htmlFigTableEnd()
     return html_text
 
@@ -581,9 +581,9 @@ def htmlTerm(text,
     html_text += '''; font-size: ''' + fontsize
     html_text += '''; color: ''' + color
     html_text += '''">'''
-    
+
     html_text += text
-    
+
     html_text +='''</pre>'''
 
     return html_text
@@ -597,7 +597,7 @@ ansi_escape_8bit = re.compile(br'''
     |   # or a single 8-bit byte Fe (omitting CSI)
         [\x80-\x9A\x9C-\x9F]
     |   # or CSI + control codes
-        (?: # 7-bit CSI, ESC [ 
+        (?: # 7-bit CSI, ESC [
             \x1B\[
         |   # 8-bit CSI, 9B
             \x9B
@@ -620,25 +620,25 @@ def closeTtySession(session):
 def closeAllOpenTtySessions():
     for s in TtyOpenSessions:
         closeTtySession(s)
-        
+
 def openTtySession(cmd, cwd, rows, cols):
     global TtySessions
     session = dict()
     master, slave = pty.openpty()
     session['master']=master
     session['slave']=slave
-    
+
     # not sure this is really necessary ... I am guessing that Popen takes care of this
     # ioctl(slave, I_PUSH, "ptem")
     # ioctl(slave, I_PUSH, "ldterm")
-    # terminal size stuff from 
-    # https://github.com/terminal-labs/cli-passthrough/blob/master/cli_passthrough/_passthrough.py  
+    # terminal size stuff from
+    # https://github.com/terminal-labs/cli-passthrough/blob/master/cli_passthrough/_passthrough.py
     size = struct.pack("HHHH", rows, cols, 0, 0)
     fcntl.ioctl(master, termios.TIOCSWINSZ, size)
-    
+
     #   nttysettings = termios.tcgetattr(master)
     #   nttysettings[3] &= ~termios.ECHO
-    #   termios.tcsetattr(master, termios.TCSANOW, nttysettings)    
+    #   termios.tcsetattr(master, termios.TCSANOW, nttysettings)
     p=subprocess.Popen(cmd, cwd=cwd, stdin=slave, stdout=slave, stderr=slave, start_new_session=True)
     session['process']=p
     session['output']=b''
@@ -658,8 +658,8 @@ def renderTtySessionOutput(output, height='100%', width='', outputlayout={'borde
     if width:
         outputlayout['width']=width
         outputlayout['overflow_x']='auto'
-    
-    text=text.decode(encoding,decodeerrors) 
+
+    text=text.decode(encoding,decodeerrors)
     out=widgets.Output(layout=outputlayout)
     with out:
         print(text,end='')
@@ -668,46 +668,46 @@ def renderTtySessionOutput(output, height='100%', width='', outputlayout={'borde
 def bashSessionSendEOF(session):
     master = session['master']
     os.write(master, b'\x04')
-    
-def bashSessionRawWrite(data, session,  
-                        batchsize=1, 
-                        interbatchdelayms=140, 
-                        sendEOF=True, 
-                        stoponprompt=True, 
-                        ignoreoutput=False, 
+
+def bashSessionRawWrite(data, session,
+                        batchsize=1,
+                        interbatchdelayms=140,
+                        sendEOF=True,
+                        stoponprompt=True,
+                        ignoreoutput=False,
                         tmout=0.5):
     # for ioctl call
-    buf_ = array.array('i', [0]) 
+    buf_ = array.array('i', [0])
     master = session['master']
     slave = session['slave']
     p = session['process']
-   
+
     delaysec = interbatchdelayms / 1000
-    
+
     if isinstance(data, str):
         data = data.encode('utf-8')
-    n = len(data)  
+    n = len(data)
 
     if batchsize <1:
         batchsize = n
-        
+
     # print("n:", n, "batchsize: ", batchsize)
     s = 0
     e = 0
     output = b''
-    
+
     writeset = [master]
-    
+
     while True:
         #print("n: ", n, " s: ", s, " e: ", e)
-        read_fds,write_fds,error_fds = select.select([master],writeset,[master],tmout)  
+        read_fds,write_fds,error_fds = select.select([master],writeset,[master],tmout)
         # process errors
         if len(error_fds):
             # print("errors found")
             break;
-            
-        # write data aslong as there is data to write   
-        if e<=n and len(write_fds): 
+
+        # write data aslong as there is data to write
+        if e<=n and len(write_fds):
             s = e
             e = s + batchsize
             if (e>n):
@@ -725,15 +725,15 @@ def bashSessionRawWrite(data, session,
                     # print("EOF: zero lenght write")
                     #os.write(master, b'')
                     bashSessionSendEOF(session)
-                e = n + 1   
-                    
+                e = n + 1
+
         # read data if there is any to read, if we find a prompt assume we are done
         if len(read_fds):
             if fcntl.ioctl(master, termios.FIONREAD, buf_, 1) == -1:
                 break
             # print("num bytes available for read:", buf_[0])
             rdata = os.read(master, buf_[0])
-            
+
             # print("read:", rdata)
             if len(rdata)>0:
                 output += rdata
@@ -741,26 +741,26 @@ def bashSessionRawWrite(data, session,
                 if stoponprompt and rn>=2 and output[rn-2] == 36 and output[rn-1] == 32:
                     # print("prompt received")
                     break
-                    
+
         if len(error_fds) == 0 and len(write_fds) == 0 and len(read_fds) == 0:
             # print("time out")
             break
-            
+
         if not p.returncode == None:
-            break            
-      
+            break
+
     if not ignoreoutput:
         #print(output)
         session['output'] = session['output'] + output
-        
+
     # output = b'$ ' + output
     return output,session
-    
-#def cleanTermBytes(bytes):    
+
+#def cleanTermBytes(bytes):
 #    return  ansi_escape_8bit.sub(b'', bytes)
 def bashSessionCmds(cmds, cwd=os.getcwd(), bufsize=4096, wait=True, rows=20, cols=80, session=None, close=True, ignoreoutput=False,  **kwargs):
     if not session:
-        session = openTtySession(['bash', '-l', '-i'], cwd, rows, cols) 
+        session = openTtySession(['bash', '-l', '-i'], cwd, rows, cols)
         new_session = True
         initdone = 0
     else:
@@ -770,28 +770,28 @@ def bashSessionCmds(cmds, cwd=os.getcwd(), bufsize=4096, wait=True, rows=20, col
             return None, None
         new_session=False
         initdone = 2
-        
+
     master = session['master']
     slave = session['slave']
     p = session['process']
-    
+
     if not isinstance(cmds,list):
         if isinstance(cmds, str):
             cmds = cmds.encode('utf-8')
         cmds = cmds.split(b'\n')
-        
+
     output = b''
     numcmds = len(cmds)
     # print("numcmds:", numcmds)
     i = 0
-    
+
     if not new_session:
         #print(cmds[i] + b'\n')
         os.write(master, cmds[i] + b'\n')
-        i=i+1 
-        
+        i=i+1
+
     while True:
-        read_fds,_,error_fds = select.select([master],[],[master])  
+        read_fds,_,error_fds = select.select([master],[],[master])
         if len(error_fds):
             kill = True;
             break;
@@ -832,10 +832,10 @@ def bashSessionCmds(cmds, cwd=os.getcwd(), bufsize=4096, wait=True, rows=20, col
         if not p.returncode == None:
             kill = True
             break
-        
+
     if close:
         closeTtySession(session)
-    
+
     if not ignoreoutput:
         #print(output)
         session['output'] = session['output'] + output
@@ -849,58 +849,58 @@ def bashSessionClose(session):
 def bashSessionOpen(cwd=os.getenv('HOME'), **kwargs):
     _, session = bashSessionCmds(cmds=[], close=False, cwd=cwd, **kwargs)
     return session
-    
+
 def bashCmds(cmds, cwd=os.getenv('HOME'), **kwargs):
     output, session = bashSessionCmds(cmds=cmds, cwd=cwd, **kwargs)
     return renderTtySessionOutput(output, **kwargs)
 
 class BashSession:
-    # create session  
+    # create session
     def __init__(self, **kwargs):
         self.session = bashSessionOpen(**kwargs)
         # turn off tab completion
         self.runNoOutput("bind 'set disable-completion on'", ignoreoutput=True)
         # clear all bash history so that our history examples are clean
         self.runNoOutput(" history -c\n history -w", ignoreoutput=True)
-        
+
     # Deleting (Calling destructor)
     def __del__(self):
         bashSessionClose(self.session)
-        
+
     def run(self, cmds, **kwargs):
         text, self.session = bashSessionCmds(cmds, session=self.session, close=False, **kwargs)
         return renderTtySessionOutput(text, **kwargs)
 
     def runNoOutput(self, cmds, **kwargs):
         _, self.session = bashSessionCmds(cmds, session=self.session, close=False, **kwargs)
-    
+
     def runAllOutput(self, cmds, **kwargs):
         self.runNoOutput(cmds, **kwargs)
         return self.output(**kwargs)
-    
+
     def rawWrite(self, data, **kwargs):
         text, self.session = bashSessionRawWrite(data, session=self.session, **kwargs)
         return renderTtySessionOutput(text, **kwargs)
-    
+
     def rawWriteNoOutput(self, data, **kwargs):
         _, self.session = bashSessionRawWrite(data, session=self.session, **kwargs)
-    
+
     def rawWriteAllOutput(self, data, **kwargs):
         self.rawWriteNoOutput(data, **kwargs)
         return self.output(**kwargs)
-    
+
     def sendEOF(self):
         bashSessionSendEOF(self.session)
-            
+
     def output(self, **kwargs):
         return renderTtySessionOutput(self.session, **kwargs)
 
-  
-        
+
+
     def getPid(self):
         return self.session['process'].pid
-    
-    
+
+
 # FIXME: JA Given the new Session code above this needs to be re thought out and cleaned up or removed
 def runTermCmd(cmd, cwd=os.getcwd(), bufsize=4096, wait=True, tmout=1.0, rows=20, cols=80):
     master, slave = pty.openpty()
@@ -908,12 +908,12 @@ def runTermCmd(cmd, cwd=os.getcwd(), bufsize=4096, wait=True, tmout=1.0, rows=20
     # not sure this is really necessary ... I am guessing that Popen takes care of this
     # ioctl(slave, I_PUSH, "ptem")
     # ioctl(slave, I_PUSH, "ldterm")
-    
-    # terminal size stuff from 
-    # https://github.com/terminal-labs/cli-passthrough/blob/master/cli_passthrough/_passthrough.py  
+
+    # terminal size stuff from
+    # https://github.com/terminal-labs/cli-passthrough/blob/master/cli_passthrough/_passthrough.py
     size = struct.pack("HHHH", rows, cols, 0, 0)
     fcntl.ioctl(master, termios.TIOCSWINSZ, size)
-    
+
     p=subprocess.Popen(['bash', '-l', '-i', '-c', cmd], cwd=cwd, stdin=slave, stdout=slave, stderr=slave, start_new_session=True)
 
     if wait:
@@ -921,11 +921,11 @@ def runTermCmd(cmd, cwd=os.getcwd(), bufsize=4096, wait=True, tmout=1.0, rows=20
         if select.select([master,],[],[],0.0)[0]:
             output = os.read(master, bufsize)
         else:
-            output = b''       
+            output = b''
     else:
         output = b''
         while True:
-            read_fds,_,error_fds = select.select([master],[],[master],tmout)  
+            read_fds,_,error_fds = select.select([master],[],[master],tmout)
             if len(error_fds):
                 break;
             if len(read_fds):
@@ -934,28 +934,28 @@ def runTermCmd(cmd, cwd=os.getcwd(), bufsize=4096, wait=True, tmout=1.0, rows=20
                     output += data
                 else:
                     break
-            else: 
+            else:
                 break;
             if not p.returncode == None:
                 break
-            
+
     subprocess.Popen.kill(p)
     os.close(master)
     return output
 
-# 'latin-1' 
+# 'latin-1'
 def TermShellCmd(cmd, prompt='$ ', markdown=False, pretext='', posttext='', prenl=True, stripnl=False, height='100%', width='', outputlayout={'border': '1px solid black'}, noposttext=False, raw=False, encoding=sys.getdefaultencoding(), decodeerrors='replace', **kwargs):
     output = runTermCmd(cmd, **kwargs)
     output=output.decode('utf-8',decodeerrors)
     if stripnl:
         output.strip()
-        
+
     if prenl:
         prenl='''
 '''
     else:
         prenl=''
-        
+
     if height:
         outputlayout['height']=height
         outputlayout['overflow_y']='scroll'
@@ -963,12 +963,12 @@ def TermShellCmd(cmd, prompt='$ ', markdown=False, pretext='', posttext='', pren
     if width:
         outputlayout['width']=width
         outputlayout['overflow_x']='auto'
-        
+
     if prompt:
         pretext += prompt + cmd #+ "\n"
         if not noposttext:
             posttext += prompt
-        
+
     if markdown:
         md = Markdown(htmlTerm('''
 ''' + pretext + output + posttext ))
@@ -1010,6 +1010,6 @@ def Answer(md):
 def setupExamples(name,files,basedir=os.getenv('HOME')):
     global exdir
     exdir=basedir + "/" + name
-    output=runTermCmd("[[ -d " + exdir + " ]] &&  rm -rf "+ exdir + 
-                 ";mkdir " + exdir + 
+    output=runTermCmd("[[ -d " + exdir + " ]] &&  rm -rf "+ exdir +
+                 ";mkdir " + exdir +
                  ";cp " + files + " " + exdir)
