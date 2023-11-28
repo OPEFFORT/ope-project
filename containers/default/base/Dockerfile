@@ -42,10 +42,11 @@ USER ${NB_UID}
 # these need to be installed to the prerequisite versions before we can install the rest of the
 # packages. Install Python 3 packages
 
-RUN conda install --quiet --yes conda=23.3.1 python=3.9.16 --no-pin --force-reinstall && \ 
-    conda install --quiet --yes ${PYTHON_PREREQ_VERSIONS} && \
-    conda install --quiet --yes ${PYTHON_INSTALL_PACKAGES} && \
-    pip install jupyterlab_rise==0.2.0 && \
+RUN mamba install --yes python=3.9.13 --no-pin --force-reinstall && \
+    mamba install --yes ${PYTHON_PREREQ_VERSIONS} && \
+    mamba install --yes ${PYTHON_INSTALL_PACKAGES} && \
+    mamba install --yes nbclient && \
+    mamba install --yes jupyterlab_rise==0.2.0 && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}" && \
     mamba clean -afy
