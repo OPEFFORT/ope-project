@@ -13,9 +13,11 @@ The OPE project is an initiative towards making education open source, and to ac
 
 
 
-## View Published User Guide
+## View Published Guides
 
 [User Guide](https://isaiahstapleton.github.io/ope-project/user_guide/user_guide_intro.html)
+
+[Contributor Guide](https://isaiahstapleton.github.io/ope-project/contributor_guide/contributor_guide_intro.html)
 
 ## [OPE CLI Tool](https://github.com/OPEFFORT/tools)
 

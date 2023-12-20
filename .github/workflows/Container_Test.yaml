@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: "3.9.16"
 
       - name: Install Dependencies
         run: |
@@ -43,6 +43,19 @@ jobs:
           echo "Image = $IMAGE"
           echo $IMAGE > image.txt
 
+      - name: Push Beta Version
+        run: |
+          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
+          docker run  -d --name stable $IMAGE
+          REGISTRY=$(cat base/ope_book_registry)
+          REGISTRY_USER=$(cat base/ope_registry_user)
+          echo $REGISTRY $REGISTRY_USER
+          docker login $REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
+          TIME=$(cat time.txt)
+          SIZE=$(docker images --format "{{.Size}}" | head -n 1)
+          make push TIME="$TIME" SIZE="$SIZE"
+          docker stop stable
+
       - name: Upload Image
         uses: actions/upload-artifact@v3
         with:
@@ -56,19 +69,6 @@ jobs:
           name: time
           path: |
             ./containers/testing/time.txt
-
-      - name: Push Beta Version
-        run: |
-          IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
-          docker run  -d --name stable $IMAGE
-          REGISTRY=$(cat base/ope_book_registry)
-          REGISTRY_USER=$(cat base/ope_registry_user)
-          echo $REGISTRY $REGISTRY_USER
-          docker login $REGISTRY -u $REGISTRY_USER -p $REGISTRY_PASSWORD
-          TIME=$(cat time.txt)
-          SIZE=$(docker images --format "{{.Size}}" | head -n 1)
-          make push TIME="$TIME" SIZE="$SIZE"
-          docker stop stable
 
 
   Health-Check:
@@ -93,6 +93,7 @@ jobs:
           CONTAINER_NAME="stable"
           HEALTH=$(docker ps --format "{{.Names}}: {{.Status}}" | grep "$CONTAINER_NAME" | awk '{print $2}') #extract health status
           echo ""
+          echo "the value of HEALTH is: $HEALTH\n"
           if [[ "$HEALTH" == "Up" ]]; then
           echo "******Pass: container is up and running*******"
           else
@@ -126,6 +127,9 @@ jobs:
           ID=$( docker ps -aqf "name=stable" ) #get id of image
           docker inspect $IMAGE > image.json #write inspect info to json for parsing
           REPO_TAG=$(jq -r '.[0].RepoTags[0]' image.json) #acquire tag
+          echo "the value of REPO_TAG is: $REPO_TAG\n"
+          echo "the value of IMAGE is: $IMAGE\n"
+          echo "testing if REPO_TAG == IMAGE\n"
           if [[ "$REPO_TAG" == "$IMAGE" ]]; then
           echo "*********CORRECT IMAGE AND VERSION: $IMAGE*********"
           else
@@ -204,7 +208,6 @@ jobs:
           mv ./temp.txt ./list.txt #rewrite truncated list to file
           python3 version_check.py ./list.txt versions.txt #send to python for checking
           docker stop stable
-
 
   Checksum:
     needs: Setup-and-Build
@@ -344,8 +347,10 @@ jobs:
          docker exec stable bash -c 'for ((i=0;i<100; i++)); do gdb -ex starti -ex quit -q --batch /usr/bin/date 2>/dev/null | grep ld; done' | tee out | uniq #run jonatahns gdb test
          expected_lines=100
          actual_lines=$(wc -l < out)
+         echo "got $actual_lines of output and expected $expected_lines of output\n"
          if [ "$actual_lines" -lt "$expected_lines" ]; then
          echo "******************Test failed****************" #if the output file contians no iterations through the test file, gdb has failed
+         exit -1
          else
          echo "******************Test passed***************"
          fi
@@ -380,8 +385,8 @@ jobs:
      runs-on: ubuntu-latest #use the latest ubuntu container image
      needs: Approval
      defaults:
-       run:
-         working-directory: ./containers/testing
+      run:
+        working-directory: ./containers/testing
      steps:
        - name: Checkout Code
          uses: actions/checkout@v3
