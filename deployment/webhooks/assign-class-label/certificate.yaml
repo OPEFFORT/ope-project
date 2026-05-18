@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: assign-class-label-tls
+spec:
+  secretName: assign-class-label-tls
+  issuerRef:
+    name: assign-class-label-issuer
+    kind: Issuer
+  commonName: "rhods-notebooks.svc"
+  dnsNames:
+    - assign-class-label-webhook.rhods-notebooks.svc

@@ -1,0 +1,43 @@
+name: assign-class-label tests and linting/formatting
+
+on:
+  push:
+    paths:
+    - container-images/assign-class-label/**
+  pull_request:
+    paths:
+    - container-images/assign-class-label/**
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        working-directory: ./container-images/assign-class-label/
+        run: |
+          pip install -r requirements.txt
+          pip install -r test-requirements.txt
+
+      - name: Run ruff format (formatting)
+        working-directory: ./container-images/assign-class-label/
+        run: |
+          ruff format
+
+      - name: Run ruff check (linting)
+        working-directory: ./container-images/assign-class-label/
+        run: |
+          ruff check --fix
+
+      - name: Run tests
+        working-directory: ./container-images/assign-class-label/
+        run: |
+          pytest tests/

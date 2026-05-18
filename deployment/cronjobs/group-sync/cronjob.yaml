@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: group-sync
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          name: group-sync
+        spec:
+          serviceAccountName: group-sync
+          containers:
+          - name: group-sync
+            image: quay.io/sdanni/bu-rhoai:toolkit
+            command: ["python3", "group-sync.py"]
+            env:
+            # EDIT VALUE HERE BEFORE RUNNING
+            - name: GROUP_NAME
+              value: cs210
+            # EDIT VALUE HERE BEFORE RUNNING
+            - name: NAMESPACE
+              value: cs210-f25-ab47f6
+            imagePullPolicy: Always
+          restartPolicy: Never
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 7

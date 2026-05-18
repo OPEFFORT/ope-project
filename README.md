@@ -2,11 +2,42 @@
 
 ## Introduction
 
-This user guide is intended to teach you how to author OPE-style books, as well as setup container images that contain all the software required for following along with the book content. 
-
 The OPE project is an initiative towards making education open source, and to achieve highly interactive teaching and presentation material.
 
-## OPE Architecture 
+This project can be defined in two parts:
+- **RHOAI Deployment Tools**: Operational tooling for running courses on OpenShift AI infrastructure
+- **OPE SDK**: Tools for authoring interactive educational books and container images
+
+The first part of the README will cover the tooling for running courses on OpenShift AI.
+
+The second part is intended to teach you how to author OPE-style books, as well as setup container images that contain all the software required for following along with the book content.
+
+
+## OpenShift AI Deployment Tools
+
+The OPE project includes comprehensive tooling for deploying and managing courses on OpenShift AI (RHOAI) infrastructure.
+
+### Components
+
+- **CronJobs**: Automated tasks for user group synchronization and notebook lifecycle management
+- **Webhooks**: Pod mutation webhooks for automatic class label assignment
+- **GPU Resource Management**: Tooling for setting up and managing GPU classes across namespaces
+- **Utility Scripts**: Helper scripts for retrieving notebook URLs and managing course resources
+
+### Deployment
+
+All RHOAI deployment resources are located in the `deployment/` directory. For detailed setup instructions, configuration options, and deployment guides, see [deployment/README.md](deployment/README.md).
+
+### Quick Start
+
+To deploy RHOAI components to your OpenShift cluster:
+
+1. Ensure you have cluster-admin access to an OpenShift cluster with RHOAI installed
+2. Review and customize configurations in `deployment/`
+3. Deploy using Kustomize: `oc apply -k deployment/<component>/`
+
+
+## OPE SDK Architecture
 
 
   ![OPE Architecture](content/images/OPE-Architecture.png)
@@ -21,17 +52,17 @@ The OPE project is an initiative towards making education open source, and to ac
 
 ## [OPE CLI Tool](https://github.com/OPEFFORT/tools)
 
-Using the official OPE tool, you can easily create, update, manage, and publish OPE projects from the command line. 
+Using the official OPE tool, you can easily create, update, manage, and publish OPE projects from the command line.
 
 ### Commands
 
-- **repo_add:** add a repository to a project                                             
-- **new_project:** create a new ope project from the ope templates                           
-- **new_book:** create a new publishable book for your content                            
-- **new_container:** add source for building a new container for your project                  
-- **update:** update and rebase changes from the OPE framework                          
-- **build:** build the book                                                   
-- **pub:** publish the book                                                     
+- **repo_add:** add a repository to a project
+- **new_project:** create a new ope project from the ope templates
+- **new_book:** create a new publishable book for your content
+- **new_container:** add source for building a new container for your project
+- **update:** update and rebase changes from the OPE framework
+- **build:** build the book
+- **pub:** publish the book
 - **new_course:** creates a new ope project seeded with 3 books (textbook, lecture notes, and labmanual) and one container
 
 
@@ -40,7 +71,7 @@ Using the official OPE tool, you can easily create, update, manage, and publish 
 
 A project consists of a collection of OPE books and associated container images.
 
-Before you create a project, an empty repository for the project should already be created. 
+Before you create a project, an empty repository for the project should already be created.
 
 Assuming that you are using github or gitlab we recommend you create a new organization for your project. If you will be publishing containers as part of your project we also recommend that you create an docker image registery organization.
 
@@ -65,7 +96,7 @@ This will add the repository to the current project in order to store and track 
 This will create a new directory (with the name of the project) with 3 sub directories:
 
 - books: This directory contains the book(s) for the project
-- containers: This directory contains the container images 
+- containers: This directory contains the container images
 - content: This directory contains the content associated with the book(s)
 
 
@@ -79,14 +110,14 @@ To create a new book, run the following command within the books directory:
 ope new_book <book name>
 ```
 
-This will create a new directory with the name of the book, within this directory there is a sub-directory "content" that will contain the content of the book and is seeded with everything needed to get started authoring said book. A symbol link is created for this content directory to the content directory in the home directory (~/content) to store the source files for all books. 
+This will create a new directory with the name of the book, within this directory there is a sub-directory "content" that will contain the content of the book and is seeded with everything needed to get started authoring said book. A symbol link is created for this content directory to the content directory in the home directory (~/content) to store the source files for all books.
 
 
 ### Editing Book Configuration
 
 - **bookname_config.yml:** This config file is used to change book settings such as: title, author, logo, URL to publish to, and jupyter extensions you would like enabled, etc.
 
-- **bookname_toc.yml:** This file is used to modify the different parts of the book. In the section labeled parts, you can add a new part by specifying it's caption (name of the part), whether it is numbered or not, and then you may specify the different chapters or sections within that part by specifying the files associated with the respective content. 
+- **bookname_toc.yml:** This file is used to modify the different parts of the book. In the section labeled parts, you can add a new part by specifying it's caption (name of the part), whether it is numbered or not, and then you may specify the different chapters or sections within that part by specifying the files associated with the respective content.
     - The caption name does not have to be the same name as the directory containing the content for that part (ex. part1 does not have to have the caption: 'part1')
     - The basic layout for a part is as follows:
     ```
@@ -94,12 +125,12 @@ This will create a new directory with the name of the book, within this director
         numbered: true
         chapters:
         - file: directory/file
-        sections: 
+        sections:
         - file: dummy_part/section
     ```
     - Each chapter may have its own sub-section
 
-- **bookname_intro.md:** This file is used to create the landing page for the textbook. The content within this file will be the first page displayed when accessing the textbook, lecture notes, or lab manual. 
+- **bookname_intro.md:** This file is used to create the landing page for the textbook. The content within this file will be the first page displayed when accessing the textbook, lecture notes, or lab manual.
 
 
 ### Creating Content
@@ -145,25 +176,25 @@ To add source for building a new container for your project, run the following c
 ope new_container <container name>
 ```
 
-This will create a new directory with the name specified for the container. This directory contains the Dockerfile along with necessary associated files for building the container. 
+This will create a new directory with the name specified for the container. This directory contains the Dockerfile along with necessary associated files for building the container.
 
 ### Adding Software Packages to the Image
 
-In order to add software packages that are not already included in the base OPE image, you are able to edit the ```requirements.txt``` file within the requirements directory. When building the image, these packages will be present in the container environment. 
+In order to add software packages that are not already included in the base OPE image, you are able to edit the ```requirements.txt``` file within the requirements directory. When building the image, these packages will be present in the container environment.
 
 ### Building and Publishing Container
 
 We utilize the make tool to efficiently build, run, tag and publish the container images. You can simply run the command 'make' followed by one of these commands.
 
 - **build** - builds the custom container image
-- **push** - append timestamp to current image and push to private registry mentioned in private_registry:private_user files under base. 
+- **push** - append timestamp to current image and push to private registry mentioned in private_registry:private_user files under base.
 - **publish** - tag current image as ope_book_registry/ope_book_user/ope_book files under base directory along with a timestamp and push it like below.
-- **pull** - pull the most recent public image 
-- **pull-priv** - pulls the most recent private image 
-- **root** - executes the private image as root user like below. 
-- **user** - executes the private image as the default user 
-- **run** - starts published version with jupyter lab interface 
-- **run-priv** - starts private version with jupyter lab interface 
+- **pull** - pull the most recent public image
+- **pull-priv** - pulls the most recent private image
+- **root** - executes the private image as root user like below.
+- **user** - executes the private image as the default user
+- **run** - starts published version with jupyter lab interface
+- **run-priv** - starts private version with jupyter lab interface
 
 
 ## List of OPE Textbooks
@@ -175,7 +206,7 @@ The textbooks in the following list are OPE textbooks. Take a look at these for 
 - [Repository](https://github.com/jappavoo/UndertheCovers)
 - [Textbook](https://jappavoo.github.io/UndertheCovers/textbook/intro_tb.html)
 - [Lecture Notes](https://jappavoo.github.io/UndertheCovers/lecturenotes/intro_ln.html)
-- [Lab Manual](https://jappavoo.github.io/UndertheCovers/labmanual/intro_lm.html) 
+- [Lab Manual](https://jappavoo.github.io/UndertheCovers/labmanual/intro_lm.html)
 
 ### OpenOS
 

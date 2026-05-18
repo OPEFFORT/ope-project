@@ -1,32 +1,33 @@
+---
 format: jb-book
 root: user_guide_intro
 parts:
-- caption: 'Introduction'
-  numbered: true
-  chapters:
-  - file: user_guide/intro/chapter1
-  - file: user_guide/intro/chapter2
-- caption: 'OPE Tools'
-  numbered: true
-  chapters:
-  - file: user_guide/tools/chapter1
-- caption: 'Creating a New Project'
-  numbered: true
-  chapters:
-  - file: user_guide/project/chapter1
-- caption: 'Creating a New Book'
-  numbered: true
-  chapters:
-  - file: user_guide/book/chapter1
-  - file: user_guide/book/chapter2
-  - file: user_guide/book/chapter3
-  - file: user_guide/book/chapter4
-- caption: 'Building Container'
-  numbered: true
-  chapters:
-  - file: user_guide/container/chapter1
-  - file: user_guide/container/chapter2
-- caption: 'List of OPE Textbooks'
-  numbered: true
-  chapters:
-  - file: user_guide/tblist/chapter1
+  - caption: Introduction
+    numbered: true
+    chapters:
+      - file: user_guide/intro/chapter1
+      - file: user_guide/intro/chapter2
+  - caption: OPE Tools
+    numbered: true
+    chapters:
+      - file: user_guide/tools/chapter1
+  - caption: Creating a New Project
+    numbered: true
+    chapters:
+      - file: user_guide/project/chapter1
+  - caption: Creating a New Book
+    numbered: true
+    chapters:
+      - file: user_guide/book/chapter1
+      - file: user_guide/book/chapter2
+      - file: user_guide/book/chapter3
+      - file: user_guide/book/chapter4
+  - caption: Building Container
+    numbered: true
+    chapters:
+      - file: user_guide/container/chapter1
+      - file: user_guide/container/chapter2
+  - caption: List of OPE Textbooks
+    numbered: true
+    chapters:
+      - file: user_guide/tblist/chapter1

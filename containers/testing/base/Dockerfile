@@ -115,4 +115,3 @@ RUN chgrp ${OPE_GROUP} -R /home
 
 USER $NB_USER
 CMD  ["/bin/bash", "-c", "cd /home/jovyan ; start-notebook.sh"]
-

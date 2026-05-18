@@ -14,5 +14,3 @@ for filename in png_files:
         print("ERROR: " + filename + " are different")
     else:
         print(filename + " are identical")
-
-        

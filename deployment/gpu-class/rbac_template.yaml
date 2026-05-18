@@ -1,0 +1,134 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: rbac-default-edit-and-jobs
+parameters:
+  - name: NAMESPACE
+    required: true
+  - name: SERVICE_ACCOUNT_NB
+    required: true
+objects:
+  # OC AUTH WB (BINDINGS FOR WORKBOOKS)
+  # ROLEBINDING FOR EXISTING EDIT ROLE
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: ${SERVICE_ACCOUNT_NB}-edit
+      namespace: ${NAMESPACE}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: edit
+    subjects:
+      - kind: ServiceAccount
+        name: ${SERVICE_ACCOUNT_NB}
+        namespace: ${NAMESPACE}
+
+  # CREATE ROLE EDIT-JOBS
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: edit-jobs
+      namespace: ${NAMESPACE}
+    rules:
+      - apiGroups: ["batch"]
+        resources: ["jobs"]
+        verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # BIND EDIT-JOBS TO THE NOTEBOOK SA
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: ${SERVICE_ACCOUNT_NB}-edit-jobs
+      namespace: ${NAMESPACE}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: edit-jobs
+    subjects:
+      - kind: ServiceAccount
+        name: ${SERVICE_ACCOUNT_NB}
+        namespace: ${NAMESPACE}
+
+  # CREATE ROLE FOR LOCAL QUEUE
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: kueue-localqueue-reader
+      namespace: ${NAMESPACE}
+    rules:
+      - apiGroups: ["kueue.x-k8s.io"]
+        resources: ["localqueues"]
+        verbs: ["get", "list", "watch"]
+
+  # BIND LOCAL QUEUE READER TO THE NOTEBOOK SA
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: ${SERVICE_ACCOUNT_NB}-kueue-localqueue-reader
+      namespace: ${NAMESPACE}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: kueue-localqueue-reader
+    subjects:
+      - kind: ServiceAccount
+        name: ${SERVICE_ACCOUNT_NB}
+        namespace: ${NAMESPACE}
+
+  # OC AUTH EXEC (BINDINGS FOR DEFAULT SERVICE ACCOUNT)
+  # BIND TO EXISTING EDIT ROLE
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: default-edit
+      namespace: ${NAMESPACE}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: edit
+    subjects:
+      - kind: ServiceAccount
+        name: default
+        namespace: ${NAMESPACE}
+
+  # BIND TO INTERACTING WITH JOBS ROLE
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: default-edit-jobs
+      namespace: ${NAMESPACE}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: edit-jobs
+    subjects:
+      - kind: ServiceAccount
+        name: default
+        namespace: ${NAMESPACE}
+
+  # PODS/EXEC ROLE
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: default-edit-pods-exec
+      namespace: ${NAMESPACE}
+    rules:
+      - apiGroups: [""]
+        resources: ["pods/exec"]
+        verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # BIND PODS/EXEC ROLE
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: default-edit-pods-exec
+      namespace: ${NAMESPACE}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: default-edit-pods-exec
+    subjects:
+      - kind: ServiceAccount
+        name: default
+        namespace: ${NAMESPACE}

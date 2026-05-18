@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ope-webhook-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ope-webhook-role
+subjects:
+- kind: ServiceAccount
+  name: webhook-sa
+  namespace: rhods-notebooks

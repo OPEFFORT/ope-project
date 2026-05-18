@@ -34,7 +34,7 @@ pub:
 	@echo "Published to:"
 	@./ghp-url.sh ${NAME}
 
-clean: 
+clean:
 	${RM} -r  ${OUTDIR}
 
 help:

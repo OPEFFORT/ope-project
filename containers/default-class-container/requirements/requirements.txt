@@ -1,0 +1,10 @@
+jupyter-book
+matplotlib
+numpy
+pandas
+jq
+ipywidgets
+notebook
+nbconvert
+jupyterlab
+nbclient

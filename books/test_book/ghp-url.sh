@@ -3,7 +3,7 @@
 GHP_SUFFIX="github.io"
 
 # extract first component of repo name
-# by github convention this is the use name 
+# by github convention this is the use name
 ghuser=$(dirname $(git config --get remote.origin.url))
 ghuser=${ghuser##*:}
 

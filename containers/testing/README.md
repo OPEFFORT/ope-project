@@ -36,7 +36,7 @@ Checksum verifies that the checksum of the container image is correct.
 
 ## Size-and-Time-Display
 
-Test pulls the beta image and runs it (needed for size)This test uses the build time recorded in the build to display this time and also queries the image to find its size and display that. 
+Test pulls the beta image and runs it (needed for size)This test uses the build time recorded in the build to display this time and also queries the image to find its size and display that.
 
 
 ## UI-Test
@@ -51,7 +51,7 @@ Test pulls the beta image and runs it. It then runs a bash sript calling gdb 100
 
 ## Approval
 
-Sends approval authorization request to approved authorization, test then waits for authorization has been granted to proceed. 
+Sends approval authorization request to approved authorization, test then waits for authorization has been granted to proceed.
 
 
 ## Publish
@@ -61,5 +61,3 @@ This test publishes the latest stable base image to the OPE quay.io repo
 
 ## NOTE
 In order to push / pull to the appropriate quay.io repo you must update registry_user and registry_password to the correct corresponding variables
-
-

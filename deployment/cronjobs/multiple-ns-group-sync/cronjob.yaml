@@ -1,0 +1,109 @@
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  name: multiple-ns-group-sync
+  labels:
+    component.opendatahub.io/name: multiple-ns-group-sync
+    opendatahub.io/component: 'true'
+    opendatahub.io/modified: 'false'
+spec:
+  schedule: '0 * * * *'
+  startingDeadlineSeconds: 200
+  concurrencyPolicy: Allow
+  suspend: false
+  jobTemplate:
+    metadata:
+      labels:
+        component.opendatahub.io/name: multiple-ns-group-sync
+        opendatahub.io/component: 'true'
+    spec:
+      template:
+        metadata:
+          labels:
+            component.opendatahub.io/name: multiple-ns-group-sync
+            opendatahub.io/component: 'true'
+            parent: multiple-ns-group-sync
+        spec:
+          restartPolicy: Never
+          serviceAccountName: multiple-ns-group-sync
+          schedulerName: default-scheduler
+          terminationGracePeriodSeconds: 30
+          securityContext: {}
+          containers:
+            - name: oc-cli
+              image: >-
+                registry.redhat.io/openshift4/ose-cli@sha256:25fef269ac6e7491cb8340119a9b473acbeb53bc6970ad029fdaae59c3d0ca61
+              command: ["/bin/bash", "-c", "--"]
+              args:
+              - |
+                # get everyone in current grouping
+                group_users=($(oc get groups $GROUP_NAME -o jsonpath='{.users[*]}'))
+
+                # get everyone who has edit permissions on a workbench
+                curr_users=()
+
+                namespaces=($(oc get ns -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep "^${CLASS_NAME}-"))
+
+                for ns in "${namespaces[@]}"; do
+                  users=$(oc -n "$ns" get rolebinding -o jsonpath='{range .items[?(@.roleRef.name=="edit")].subjects[?(@.kind=="User")]}{.name}{"\n"}{end}')
+                  for u in $users; do
+                    [[ -z "$u" ]] && continue
+
+                    # if not in already in current users, add to current users
+                    [[ " ${curr_users[*]} " =~ " $u " ]] || curr_users+=("$u")
+                  done
+                done
+
+                # add users to the group who have rolebindings, but are not in the group
+                users_to_add=()
+                # remove users who are in the group, but dont have rolebindings
+                users_to_remove=()
+
+                for u in ${curr_users[@]}; do
+                    # if not in group users, but in current users, add user
+                    if [[ ! " ${group_users[*]} " =~ " $u " ]]; then
+                    users_to_add+=("$u")
+                    fi
+                done
+
+                for u in ${group_users[@]}; do
+                    # if not in group users, but in current users, add user
+                    if [[ ! " ${curr_users[*]} " =~ " $u " ]]; then
+                    users_to_remove+=("$u")
+                    fi
+                done
+
+                echo "users to add:"
+                echo ${users_to_add[@]}
+                echo " "
+
+                echo "users to remove:"
+                echo ${users_to_remove[@]}
+                echo " "
+
+                if [ ${#users_to_add[@]} -gt 0 ]; then
+                  oc adm groups add-users "$GROUP_NAME" "${users_to_add[@]}"
+                fi
+
+                if [ ${#users_to_remove[@]} -gt 0 ]; then
+                  oc adm groups remove-users "$GROUP_NAME" "${users_to_remove[@]}"
+                fi
+              env:
+              # EDIT VALUE HERE BEFORE RUNNING
+              - name: CLASS_NAME
+                value: "bu-cs599-pmpp-cuda"
+              - name: GROUP_NAME
+                value: "cs599-pmpp"
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 800Mi
+                requests:
+                  cpu: 100m
+                  memory: 400Mi
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+              imagePullPolicy: IfNotPresent
+          dnsPolicy: ClusterFirst
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 7

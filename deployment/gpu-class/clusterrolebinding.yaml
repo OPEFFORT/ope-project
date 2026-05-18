@@ -1,0 +1,41 @@
+# CREATE KUEUE CLUSTER QUEUE READER CLUSTERROLE BINDING
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: csw-kueue-clusterqueue-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kueue-clusterqueue-reader
+subjects:
+- kind: Group
+  name: cs599-pmpp
+  apiGroup: rbac.authorization.k8s.io
+---
+# CREATE POD READER CLUSTERROLE BINDING
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: csw-pod-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: pod-reader
+subjects:
+- kind: Group
+  name: cs599-pmpp
+  apiGroup: rbac.authorization.k8s.io
+---
+# CREATE NODE READER CLUSTERROLE BINDING
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: csw-node-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: node-reader
+subjects:
+- kind: Group
+  name: cs599-pmpp
+  apiGroup: rbac.authorization.k8s.io

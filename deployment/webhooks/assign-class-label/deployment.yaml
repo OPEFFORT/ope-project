@@ -1,0 +1,40 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: assign-class-label-webhook
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: assign-class-label-webhook
+        webhook: "true"
+    spec:
+      containers:
+        - name: assign-class-label
+          image: quay.io/rh-ee-istaplet/ope-webhooks:assign-class-label-webhook
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 443
+          volumeMounts:
+            - name: tls
+              mountPath: /certs/webhook.crt
+              subPath: tls.crt
+              readOnly: true
+            - name: tls
+              mountPath: /certs/webhook.key
+              subPath: tls.key
+              readOnly: true
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            # EDIT VALUE HERE BEFORE RUNNING, must be comma separated
+            - name: RHOAI_CLASS_GROUPS
+              value: "cs210,dsp562"
+      serviceAccountName: webhook-sa
+      volumes:
+        - name: tls
+          secret:
+            secretName: assign-class-label-tls

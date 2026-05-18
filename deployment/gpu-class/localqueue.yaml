@@ -1,0 +1,29 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: localqueue
+parameters:
+  - name: NAMESPACE
+    required: true
+objects:
+  - apiVersion: kueue.x-k8s.io/v1beta1
+    kind: LocalQueue
+    metadata:
+      name: v100-localqueue
+      namespace: ${NAMESPACE}
+    spec:
+      clusterQueue: v100-clusterqueue
+  - apiVersion: kueue.x-k8s.io/v1beta1
+    kind: LocalQueue
+    metadata:
+      name: a100-localqueue
+      namespace: ${NAMESPACE}
+    spec:
+      clusterQueue: a100-clusterqueue
+  - apiVersion: kueue.x-k8s.io/v1beta1
+    kind: LocalQueue
+    metadata:
+      name: h100-localqueue
+      namespace: ${NAMESPACE}
+    spec:
+      clusterQueue: h100-clusterqueue

@@ -265,8 +265,8 @@ def displayBytes(bytes=[[0x00]],
                  td_hover_bgcolor="white",
                  td_hover_color="black",
                  disp=True,
-				 prehtml='<div style="overflow:scroll; display: table; margin:auto auto;">',
-				 posthtml='</div>'
+                 prehtml='<div style="overflow:scroll; display: table; margin:auto auto;">',
+                 posthtml='</div>'
                  ):
 
     # if no labels specified then send in blanks to supress
@@ -359,7 +359,7 @@ def displayBytes(bytes=[[0x00]],
             {'selector' : 'tr:hover', 'props': tr_hover_props },
             {'selector' : 'th:hover', 'props': th_hover_props }
         ])
-  
+
     import warnings
     warnings.filterwarnings('ignore')
     # if no row labels hide them
