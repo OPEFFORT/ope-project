@@ -1,0 +1,32 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: assign-class-label-webhook
+  annotations:
+    cert-manager.io/inject-ca-from: rhods-notebooks/assign-class-label-tls
+webhooks:
+- name: assign-class-label-webhook.rhods-notebooks.svc
+  clientConfig:
+    service:
+      namespace: rhods-notebooks
+      name: assign-class-label-webhook
+      path: /mutate
+  rules:
+    - operations: ["CREATE"]
+      apiGroups: [""]
+      apiVersions: ["v1"]
+      resources: ["pods"]
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: In
+        values:
+          - rhods-notebooks
+  objectSelector:
+    matchExpressions:
+      - key: webhook
+        operator: NotIn
+        values:
+          - "true"
+  sideEffects: None
+  admissionReviewVersions: ["v1"]

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: assign-class-label-webhook
+spec:
+  ports:
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 5000

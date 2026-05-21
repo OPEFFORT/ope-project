@@ -1,0 +1,210 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+parameters:
+- name: NOTEBOOK_NAME
+  required: true
+- name: RUN_NAME
+  required: true
+- name: USERNAME
+  required: true
+- name: IMAGE_NAME
+  required: true
+- name: NAMESPACE
+  required: true
+- name: OPENSHIFT_URL
+  required: true
+- name: USER
+  required: true
+- name: IMAGE_REPO
+  required: true
+  value: "image-registry.openshift-image-registry.svc:5000/redhat-ods-applications"
+- name: HUB_HOST
+  required: true
+- name: PVC_SIZE
+  required: true
+  value: "20Gi"
+- name: TOKEN
+  required: false
+objects:
+- apiVersion: kubeflow.org/v1beta1
+  kind: Notebook
+  metadata:
+    annotations:
+      notebooks.opendatahub.io/inject-oauth: 'true'
+      notebooks.opendatahub.io/last-image-selection: ${IMAGE_NAME}
+      notebooks.opendatahub.io/last-size-selection: Small
+      notebooks.opendatahub.io/oauth-logout-url: >-
+        ${OPENSHIFT_URL}/${NAMESPACE}?notebookLogout=${NOTEBOOK_NAME}
+      opendatahub.io/username: ${USER}
+      openshift.io/description: ''
+      openshift.io/display-name: ${NOTEBOOK_NAME}
+      opendatahub.io/image-display-name: ${IMAGE_NAME}
+    name: ${NOTEBOOK_NAME}
+    labels:
+      ope-run: ${RUN_NAME}
+      app: ${NOTEBOOK_NAME}
+      opendatahub.io/dashboard: 'true'
+      opendatahub.io/odh-managed: 'true'
+      opendatahub.io/user: ${USER}
+  spec:
+    affinity:
+    nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - preference:
+        matchExpressions:
+          - key: nvidia.com/gpu.present
+            # set the value to 'true' to use nodes with GPUs
+            operator: In
+            values:
+            - 'false'
+            weight: 1
+    template:
+      spec:
+        containers:
+          - resources:
+              limits:
+                cpu: '2'
+                memory: 8Gi
+              requests:
+                cpu: '1'
+                memory: 8Gi
+            readinessProbe:
+              failureThreshold: 3
+              httpGet:
+                path: /notebook/${NAMESPACE}/${NOTEBOOK_NAME}/api
+                port: notebook-port
+                scheme: HTTP
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              successThreshold: 1
+              timeoutSeconds: 1
+            name: ${NOTEBOOK_NAME}
+            livenessProbe:
+              failureThreshold: 3
+              httpGet:
+                path: /notebook/${NAMESPACE}/${NOTEBOOK_NAME}/api
+                port: notebook-port
+                scheme: HTTP
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              successThreshold: 1
+              timeoutSeconds: 1
+            env:
+              - name: NOTEBOOK_ARGS
+                value: |-
+                  --ServerApp.port=8888
+                                    --ServerApp.token=${TOKEN}
+                                    --ServerApp.password=''
+                                    --ServerApp.base_url=/notebook/${NAMESPACE}/${NOTEBOOK_NAME}
+                                    --ServerApp.quit_button=False
+                                    --ServerApp.tornado_settings={"user":"${USER}","hub_host":"${HUB_HOST}","hub_prefix":"projects/${NAMESPACE}"}
+              - name: JUPYTER_IMAGE
+                value: >-
+                  ${IMAGE_REPO}/${IMAGE_NAME}:latest
+            ports:
+              - containerPort: 8888
+                name: notebook-port
+                protocol: TCP
+            imagePullPolicy: Always
+            volumeMounts:
+              - mountPath: /opt/app-root/src
+                name: ${NOTEBOOK_NAME}
+              - mountPath: /dev/shm
+                name: shm
+            image: >-
+                ${IMAGE_REPO}/${IMAGE_NAME}:latest
+            workingDir: /opt/app-root/src
+          - resources:
+              limits:
+                cpu: 100m
+                memory: 64Mi
+              requests:
+                cpu: 100m
+                memory: 64Mi
+            readinessProbe:
+              failureThreshold: 3
+              httpGet:
+                path: /oauth/healthz
+                port: oauth-proxy
+                scheme: HTTPS
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              successThreshold: 1
+              timeoutSeconds: 1
+            name: oauth-proxy
+            livenessProbe:
+              failureThreshold: 3
+              httpGet:
+                path: /oauth/healthz
+                port: oauth-proxy
+                scheme: HTTPS
+              initialDelaySeconds: 30
+              periodSeconds: 5
+              successThreshold: 1
+              timeoutSeconds: 1
+            env:
+              - name: NAMESPACE
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
+            ports:
+              - containerPort: 8443
+                name: oauth-proxy
+                protocol: TCP
+            imagePullPolicy: Always
+            volumeMounts:
+              - mountPath: /etc/oauth/config
+                name: oauth-config
+              - mountPath: /etc/tls/private
+                name: tls-certificates
+            image: >-
+              registry.redhat.io/openshift4/ose-oauth-proxy@sha256:4bef31eb993feb6f1096b51b4876c65a6fb1f4401fee97fa4f4542b6b7c9bc46
+            args:
+              - '--provider=openshift'
+              - '--https-address=:8443'
+              - '--http-address='
+              - '--openshift-service-account=${NOTEBOOK_NAME}'
+              - '--cookie-secret-file=/etc/oauth/config/cookie_secret'
+              - '--cookie-expire=24h0m0s'
+              - '--tls-cert=/etc/tls/private/tls.crt'
+              - '--tls-key=/etc/tls/private/tls.key'
+              - '--upstream=http://localhost:8888'
+              - '--upstream-ca=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
+              - '--email-domain=*'
+              - '--skip-provider-button'
+              - >-
+                --openshift-sar={"verb":"get","resource":"notebooks","resourceAPIGroup":"kubeflow.org","resourceName":"${NOTEBOOK_NAME}","namespace":"$(NAMESPACE)"}
+              - >-
+                --logout-url=${OPENSHIFT_URL}${NAMESPACE}?notebookLogout=${NOTEBOOK_NAME}
+        enableServiceLinks: false
+        serviceAccountName: ${NOTEBOOK_NAME}
+        volumes:
+          - name: ${NOTEBOOK_NAME}
+            persistentVolumeClaim:
+              claimName: ${NOTEBOOK_NAME}
+          - emptyDir:
+              medium: Memory
+            name: shm
+          - name: oauth-config
+            secret:
+              defaultMode: 420
+              secretName: ${NOTEBOOK_NAME}-oauth-config
+          - name: tls-certificates
+            secret:
+              defaultMode: 420
+              secretName: ${NOTEBOOK_NAME}-tls
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${NOTEBOOK_NAME}
+    labels:
+      app: ${NOTEBOOK_NAME}
+      notebook-name: ${NOTEBOOK_NAME}
+      ope-run: ${RUN_NAME}
+      opendatahub.io/dashboard: 'true'
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: "${PVC_SIZE}"

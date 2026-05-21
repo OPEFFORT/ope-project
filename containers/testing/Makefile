@@ -38,7 +38,7 @@ PYTHON_INSTALL_PACKAGES := $(shell cat base/python_pkgs)
 PIP_INSTALL_PACKAGES := $(shell cat base/pip_pkgs)
 
 JUPYTER_ENABLE_EXTENSIONS := $(shell cat base/jupyter_enable_exts)
-JUPYTER_DISABLE_EXTENSIONS := $(shell if  [[ -a base/jupyter_disable_exts  ]]; then cat base/jupyter_disable_exts; fi) 
+JUPYTER_DISABLE_EXTENSIONS := $(shell if  [[ -a base/jupyter_disable_exts  ]]; then cat base/jupyter_disable_exts; fi)
 
 # expand installation so that the image feels more like a proper UNIX user environment with man pages, etc.
 UNMIN := yes
@@ -112,7 +112,7 @@ show-tag: ARGS ?=
 show-tag: DARGS ?=
 show-tag: ## tag current private build as beta
 	@-echo $(OPE_BOOK_REG)$(OPE_BOOK_IMAGE)$(OPE_BETA_TAG)
-  
+
 
 ### DEBUG TARGETS
 
@@ -128,7 +128,7 @@ user: ## start private version with usershell to poke around
 
 
 ### PUBLIC USAGE TARGETS
-pull: 
+pull:
 pull: ## pull most recent public version
 	docker pull $(OPE_BOOK_REG)$(OPE_BOOK_IMAGE)$(OPE_PUBLIC_TAG)
 
@@ -137,6 +137,4 @@ run: ARGS ?=
 run: DARGS ?= -u $(OPE_UID):$(OPE_GID) -v "${HOST_DIR}":"${MOUNT_DIR}" -v "${SSH_AUTH_SOCK}":"${SSH_AUTH_SOCK}" -v "${SSH_AUTH_SOCK}":"${SSH_AUTH_SOCK}" -e SSH_AUTH_SOCK=${SSH_AUTH_SOCK} -p ${SSH_PORT}:22
 run: PORT ?= 8888
 run: ## start published version with jupyter lab interface
-	docker run -it --rm -p $(PORT):$(PORT) $(DARGS) $(OPE_BOOK_REG)$(OPE_BOOK_IMAGE)$(OPE_PUBLIC_TAG) $(ARGS) 
-
-
+	docker run -it --rm -p $(PORT):$(PORT) $(DARGS) $(OPE_BOOK_REG)$(OPE_BOOK_IMAGE)$(OPE_PUBLIC_TAG) $(ARGS)

@@ -1,0 +1,177 @@
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  name: nb-culler
+  labels:
+    component.opendatahub.io/name: nb-culler
+    opendatahub.io/component: 'true'
+    opendatahub.io/modified: 'false'
+spec:
+  schedule: '0 * * * *'
+  startingDeadlineSeconds: 200
+  concurrencyPolicy: Replace
+  suspend: false
+  jobTemplate:
+    metadata:
+      labels:
+        component.opendatahub.io/name: nb-culler
+        opendatahub.io/component: 'true'
+    spec:
+      template:
+        metadata:
+          labels:
+            component.opendatahub.io/name: nb-culler
+            opendatahub.io/component: 'true'
+            parent: nb-culler
+        spec:
+          restartPolicy: Never
+          serviceAccountName: nb-culler
+          schedulerName: default-scheduler
+          terminationGracePeriodSeconds: 30
+          securityContext: {}
+          containers:
+            - name: oc-cli
+              image: >-
+                registry.redhat.io/openshift4/ose-cli@sha256:25fef269ac6e7491cb8340119a9b473acbeb53bc6970ad029fdaae59c3d0ca61
+              command: ["/bin/bash", "-c", "--"]
+              args:
+              - |
+                # Check notebooks in rhods-notebooks namespace
+                notebooks=$(oc get notebooks -n rhods-notebooks -o jsonpath="{range .items[?(@.status.containerState.running)]}{.metadata.name}{' '}{.metadata.namespace}{' '}{.status.containerState.running.startedAt}{' '}{.metadata.annotations['opendatahub\.io/username']}{' '}{.metadata.annotations['notebooks\.opendatahub\.io/last-image-selection']}{' '}{.metadata.annotations['notebooks\.opendatahub\.io/last-size-selection']}{'\n'}{end}")
+                if [ -z "$notebooks" ]; then
+                    echo "No running notebooks found"
+                    exit 0
+                fi
+                group_members_1=$(oc get group $GROUP_NAME_1 -o=jsonpath='{.users[*]}')
+                group_members_2=$(oc get group $GROUP_NAME_2 -o=jsonpath='{.users[*]}')
+
+                # Loop through each notebook
+                while read -r nb ns ts user image size; do
+                    current_time=$(date -u +%s)
+                    timestamp=$(date -d $ts +%s)
+                    difference=$((current_time - timestamp))
+                    user_in_group1=false
+                    user_in_group2=false
+                    pvc="jupyterhub-nb-${nb#"jupyter-nb-"}-pvc"
+
+                    if [[ " $group_members_1 " =~ " $user " ]]; then
+                        echo "$user is in the $GROUP_NAME_1 group."
+                        user_in_group1=true
+                    fi
+                    if [[ " $group_members_2 " =~ " $user " ]]; then
+                        echo "$user is in the $GROUP_NAME_2 group."
+                        user_in_group2=true
+                    fi
+
+                    # USER IS IN BOTH CLASSES
+                    if [[ $user_in_group1 == true && $user_in_group2 == true ]]; then
+
+                        if [[ $CUTOFF_TIME_1 -ge $CUTOFF_TIME_2 ]]; then
+                            LONGER_CUTOFF=$CUTOFF_TIME_1
+                        else
+                            LONGER_CUTOFF=$CUTOFF_TIME_2
+                        fi
+
+                        if [[ $difference -gt $LONGER_CUTOFF ]]; then
+                            echo "$nb is more than $(($LONGER_CUTOFF / 3600)) hours old, stopping the notebook"
+                            oc patch notebook $nb -n $ns --type merge -p '{"metadata":{"annotations":{"kubeflow-resource-stopped":"'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"}}}'
+                        fi
+
+                    # USER IS IN CLASS ONE
+                    elif $user_in_group1; then
+                        # Handle group1 conditions
+                        if [ $difference -gt $CUTOFF_TIME_1 ]; then
+                            echo "$nb is more than $(($CUTOFF_TIME_1 / 3600)) hours old, stopping the notebook"
+                            oc patch notebook $nb -n $ns --type merge -p '{"metadata":{"annotations":{"kubeflow-resource-stopped":"'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"}}}'
+                        fi
+
+                    # USER IS IN CLASS TWO
+                    elif $user_in_group2; then
+                        # Handle group2 conditions
+                        if [ $difference -gt $CUTOFF_TIME_2 ]; then
+                            echo "$nb is more than $(($CUTOFF_TIME_2 / 3600)) hours old, stopping the notebook"
+                            oc patch notebook $nb -n $ns --type merge -p '{"metadata":{"annotations":{"kubeflow-resource-stopped":"'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"}}}'
+                        fi
+
+                    # USER IS IN NEITHER CLASS
+                    else
+                        echo "user $user does not belong to $GROUP_NAME_1 or $GROUP_NAME_2, deleting the notebook"
+                        oc delete notebook $nb -n $ns
+                        oc delete pvc $pvc -n $ns
+                    fi
+                done <<< "$notebooks"
+
+                # Update: Check notebooks in bu-cs391-pmpp-* namespaces
+                echo "Checking notebooks in bu-cs391-pmpp-* namespaces..."
+
+                # Get all namespaces that start with "bu-cs391-pmpp-*"
+                bu_cs391_namespaces=$(oc get namespaces --no-headers -o custom-columns=":metadata.name" | grep "^bu-cs391-pmpp-")
+
+                if [ -n "$bu_cs391_namespaces" ]; then
+                    echo "bu-cs391 namespaces: $bu_cs391_namespaces"
+
+                    # Loop through each namespace
+                    while read -r bu_cs391_ns; do
+                        if [ -z "$bu_cs391_ns" ]; then
+                            continue
+                        fi
+
+                        echo "Checking namespace: $bu_cs391_ns"
+                        bu_cs391_notebooks=$(oc get notebooks -n $bu_cs391_ns -o jsonpath="{range .items[?(@.status.containerState.running)]}{.metadata.name}{' '}{.status.containerState.running.startedAt}{'\n'}{end}")
+
+                        if [ -n "$bu_cs391_notebooks" ]; then
+                            echo "Found running notebooks in $bu_cs391_ns: $bu_cs391_notebooks"
+
+                            # Loop through each notebook in this namespace
+                            while read -r nb ts; do
+                                if [ -z "$nb" ] || [ -z "$ts" ]; then
+                                    continue
+                                fi
+
+                                current_time=$(date -u +%s)
+                                timestamp=$(date -d $ts +%s)
+                                difference=$((current_time - timestamp))
+
+                                echo "Notebook $nb in namespace $bu_cs391_ns has been running for $((difference / 3600)) hours"
+
+                                # Check if notebook has been idle for more than X hours
+                                if [ $difference -gt $CUTOFF_TIME_2 ]; then
+                                    echo "$nb in namespace $bu_cs391_ns is more than $(($CUTOFF_TIME_2 / 3600)) hours old, stopping the notebook"
+                                    oc patch notebook $nb -n $bu_cs391_ns --type merge -p '{"metadata":{"annotations":{"kubeflow-resource-stopped":"'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"}}}'
+                                else
+                                    echo "$nb in namespace $bu_cs391_ns is within the cutoff time limit"
+                                fi
+                            done <<< "$bu_cs391_notebooks"
+                        else
+                            echo "No running notebooks found in namespace $bu_cs391_ns"
+                        fi
+                    done <<< "$bu_cs391_namespaces"
+                else
+                    echo "No namespaces found starting with 'bu-cs391-pmpp-'"
+                fi
+              env:
+              # EDIT VALUE HERE BEFORE RUNNING
+              - name: GROUP_NAME_1
+                value: "dsp562"
+              # EDIT VALUE HERE BEFORE RUNNING
+              - name: GROUP_NAME_2
+                value: "cs210"
+              # EDIT VALUE HERE BEFORE RUNNING
+              - name: CUTOFF_TIME_1
+                value: "10800"
+              # EDIT VALUE HERE BEFORE RUNNING
+              - name: CUTOFF_TIME_2
+                value: "43200"
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 800Mi
+                requests:
+                  cpu: 100m
+                  memory: 400Mi
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+              imagePullPolicy: IfNotPresent
+          dnsPolicy: ClusterFirst
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 7

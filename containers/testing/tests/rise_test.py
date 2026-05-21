@@ -72,5 +72,3 @@ print("returning to homepage")
 
 driver.switch_to.window(main_window_handle)
 driver.refresh()
-
-

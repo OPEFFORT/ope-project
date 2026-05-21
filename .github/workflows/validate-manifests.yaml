@@ -1,0 +1,8 @@
+name: Validate Kubernetes manifests
+
+on:
+  pull_request:
+
+jobs:
+  validate-manifests:
+    uses: ocp-on-nerc/workflows/.github/workflows/validate-manifests.yaml@main

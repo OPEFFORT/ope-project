@@ -4,7 +4,7 @@ VERSIONS=base/mamba_versions
 
 echo $(while read pkg; do
    info=$(grep "^${pkg}" $VERSIONS)
-   if [[ -n $info ]]; then	   
+   if [[ -n $info ]]; then
      echo "$info" | while read pkg ver rest; do
        echo "${pkg}=$ver"
      done
@@ -12,4 +12,3 @@ echo $(while read pkg; do
        echo "${pkg}"
    fi
 done)
-

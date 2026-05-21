@@ -28,7 +28,7 @@ else:
     api_url=localhost_url + 'api/'
     api_term_url=api_url + 'terminals'
     api_token=info['token']
-    # urls used as relative to my server 
+    # urls used as relative to my server
     base_url=info['base_url']
 
     # on the operate-firrst jupyterhub I found that api_token is not set but
@@ -44,7 +44,7 @@ else:
         print("ERROR: unable to deterimine API token");
 
 
-    # get list of current terminals so that we can reuse this if enough exist 
+    # get list of current terminals so that we can reuse this if enough exist
     # otherwise we will create new ones as needed
     r=requests.get(url=api_term_url, headers={'Authorization': 'token ' + api_token})
     TERMINALS=r.json()
@@ -64,12 +64,12 @@ else:
 
     try:
         BUILDTERM=TERMINALS[1]['name']
-    except IndexError:   
+    except IndexError:
         BUILDTERM=mkTerm()
 
     try:
         DEBUGGERTERM=TERMINALS[2]['name']
-    except IndexError:   
+    except IndexError:
         DEBUGGERTERM=mkTerm()
 
 
@@ -93,10 +93,10 @@ else:
     # CSS customization for RISE has been moved
     # to <notebook_name>.css which RISE attempts to load
     # see rise examples in the rise repo
-    # cusomization of ccs to make slides look better 
+    # cusomization of ccs to make slides look better
     # display(HTML(
     #     '<style>'
-    #         '#notebook { padding-top:0px !important; } ' 
+    #         '#notebook { padding-top:0px !important; } '
     #         '.container { width:100% !important; } '
     #         '.CodeMirror { width:100% !important;}'
     #         '.end_space { min-height:0px !important; } '
@@ -140,8 +140,8 @@ else:
 #     font-size: inherit;
 # }
 
-# /* output cells that generate markddown... not sure 
-# why but 80% seems to match 
+# /* output cells that generate markddown... not sure
+# why but 80% seems to match
 #   the rest of the areas but it seems to work */
 # body.rise-enabled div.output_subarea.output_markdown
 # .rendered_html {
@@ -149,7 +149,7 @@ else:
 # }
 
 
-# /* Ingnoring these 
+# /* Ingnoring these
 # body.rise-enabled div.output_subarea.output_text.out
 # put_result {
 #     font-size: 10%;
@@ -186,13 +186,13 @@ else:
 #     font-size: 100%;
 # }
 
-# #notebook { padding-top:0px !important; }  
+# #notebook { padding-top:0px !important; }
 
-# .container { width:100% !important; } 
+# .container { width:100% !important; }
 
 # .CodeMirror { width:100% !important;}
 
-# .end_space { min-height:0px !important; } 
+# .end_space { min-height:0px !important; }
 
 # .prompt { display:none }
 
@@ -203,15 +203,15 @@ else:
 # .5em;}
 
 # /* JA Hacks to get annimation buttons looking better
-#  with RISE.  
+#  with RISE.
 #    This is very crude and overkill */
-# /* button { background-color: #cccccc00; font-size: 
+# /* button { background-color: #cccccc00; font-size:
 # 30% } */
 # /* .animation { background-color: white } */
 # .anim-controls { color: blue; background-color: whit
-# e; font-size: 40% } 
+# e; font-size: 40% }
 
-# /* not very useful, but an OBVIOUS setting that you 
+# /* not very useful, but an OBVIOUS setting that you
 # cannot miss */
 # div.cell.code_cell.rendered {
 #     border-radius: 0px 0px 0px 0px;
